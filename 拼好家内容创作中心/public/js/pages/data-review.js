@@ -2,6 +2,11 @@ import { api, ApiError } from '../api.js';
 import { store } from '../store.js';
 import { toast } from '../components/toast.js';
 
+// 账号在账号矩阵页变更后，即时同步本页筛选，无需手动刷新
+store.on('accounts:updated', () => {
+  if (document.getElementById('reviewAccountFilter')) renderFilters();
+});
+
 const PLATFORM_LABELS = {
   douyin: '抖音',
   xiaohongshu: '小红书',

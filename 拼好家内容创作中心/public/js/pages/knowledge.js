@@ -1,4 +1,5 @@
 import { marked } from '../vendor/marked.esm.js';
+import DOMPurify from '../vendor/dompurify.es.js';
 import { api, ApiError } from '../api.js';
 import { toast } from '../components/toast.js';
 
@@ -41,28 +42,12 @@ function escapeHtml(value) {
 
 function renderMarkdown(source) {
   const template = document.createElement('template');
-  template.innerHTML = marked.parse(String(source || ''), { gfm: true, breaks: true });
-  template.content.querySelectorAll(
-    'script, style, iframe, object, embed, form, input, button, textarea, select, meta, link'
-  ).forEach((element) => element.remove());
-  template.content.querySelectorAll('*').forEach((element) => {
-    [...element.attributes].forEach((attribute) => {
-      const name = attribute.name.toLowerCase();
-      const value = attribute.value.trim().toLowerCase();
-      if (name.startsWith('on') || name === 'srcdoc') {
-        element.removeAttribute(attribute.name);
-      }
-      if (
-        (name === 'href' || name === 'src') &&
-        /^(javascript:|data:)/.test(value)
-      ) {
-        element.removeAttribute(attribute.name);
-      }
-    });
-    if (element.tagName === 'A') {
-      element.setAttribute('target', '_blank');
-      element.setAttribute('rel', 'noopener noreferrer');
-    }
+  template.innerHTML = DOMPurify.sanitize(
+    marked.parse(String(source || ''), { gfm: true, breaks: true })
+  );
+  template.content.querySelectorAll('a').forEach((element) => {
+    element.setAttribute('target', '_blank');
+    element.setAttribute('rel', 'noopener noreferrer');
   });
   return template.innerHTML;
 }

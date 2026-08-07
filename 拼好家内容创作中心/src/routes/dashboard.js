@@ -338,16 +338,19 @@ function generatedTodos(database, date) {
     SELECT todo_key FROM dashboard_todo_actions
     WHERE workspace_id = 'default' AND effective_date = ?
   `).all(date).map((row) => row.todo_key));
+  // 一次性取出所有已有表现数据的卡片，避免在循环内逐条查询（N+1）
+  const cardsWithPerformance = new Set(
+    database.prepare(`
+      SELECT DISTINCT content_card_id FROM content_performance
+    `).all().map((row) => row.content_card_id)
+  );
   const todos = [];
 
   for (const row of rows) {
     const updatedDays = ageInDays(row.updated_at, date);
     const statusDays = ageInDays(row.status_changed_at, date);
     if (row.status === 'published') {
-      const hasPerformance = database.prepare(`
-        SELECT 1 FROM content_performance
-        WHERE content_card_id = ? LIMIT 1
-      `).get(row.id);
+      const hasPerformance = cardsWithPerformance.has(row.id);
       if (statusDays >= 2 && !hasPerformance) {
         todos.push({
           key: `backfill:${row.id}`,

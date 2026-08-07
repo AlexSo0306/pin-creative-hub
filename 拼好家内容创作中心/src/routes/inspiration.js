@@ -395,6 +395,10 @@ function decodeUploadFilename(value) {
   return decoded.includes('\uFFFD') ? filename : decoded;
 }
 
+const MAX_ZIP_FILES = 200;
+const MAX_UNCOMPRESSED_TOTAL = 100 * 1024 * 1024;
+const MAX_UNCOMPRESSED_ENTRY = 50 * 1024 * 1024;
+
 async function markdownFiles(file) {
   if (!file) throw httpError(422, 'VALIDATION_ERROR', '请选择 ZIP 或 Markdown 文件');
   if (/\.md$/i.test(file.originalname)) {
@@ -413,10 +417,28 @@ async function markdownFiles(file) {
   if (!entries.length) {
     throw httpError(422, 'NO_MARKDOWN_FILES', '压缩包中未找到 .md 文件');
   }
-  return Promise.all(entries.map(async (entry) => ({
-    filename: entry.name.split('/').at(-1),
-    body: await entry.async('string')
-  })));
+  if (entries.length > MAX_ZIP_FILES) {
+    throw httpError(413, 'ZIP_TOO_MANY_FILES', `压缩包内 .md 文件数量超过上限（${MAX_ZIP_FILES} 个）`);
+  }
+  // 限制解压膨胀（zip bomb 缓解）：单文件与累计解压大小均设上限，边解压边检查
+  const files = [];
+  let totalSize = 0;
+  for (const entry of entries) {
+    const declaredSize = entry._data?.uncompressedSize || 0;
+    if (declaredSize > MAX_UNCOMPRESSED_ENTRY) {
+      throw httpError(413, 'ZIP_ENTRY_TOO_LARGE', `压缩包内「${entry.name}」解压后体积超过限制`);
+    }
+    const body = await entry.async('string');
+    totalSize += body.length;
+    if (totalSize > MAX_UNCOMPRESSED_TOTAL) {
+      throw httpError(413, 'ZIP_TOO_LARGE', '压缩包解压后总大小超过限制');
+    }
+    files.push({
+      filename: entry.name.split('/').at(-1),
+      body
+    });
+  }
+  return files;
 }
 
 function metricValue(row, metric) {

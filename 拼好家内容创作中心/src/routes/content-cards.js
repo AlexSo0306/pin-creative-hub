@@ -5,6 +5,15 @@ const PLATFORMS = ['douyin', 'xiaohongshu', 'shipinhao'];
 const STATUSES = ['idea', 'scripted', 'producing', 'published', 'reviewed'];
 const PROGRESS_VALUES = ['shooting', 'editing', 'ready'];
 
+// 看板状态机：选题池 → 脚本库 → 制作中 → 已发布 → 已复盘，仅允许逐级前进与回退
+const STATUS_TRANSITIONS = {
+  idea: ['scripted'],
+  scripted: ['producing', 'idea'],
+  producing: ['published', 'scripted'],
+  published: ['reviewed'],
+  reviewed: []
+};
+
 function httpError(status, code, message, details) {
   return Object.assign(new Error(message), { status, code, details });
 }
@@ -249,6 +258,16 @@ export function createContentCardsRouter(database) {
     if (!STATUSES.includes(status)) {
       throw httpError(422, 'VALIDATION_ERROR', '内容状态无效', {
         status: '请选择有效的内容状态'
+      });
+    }
+    const current = database.prepare(`
+      SELECT status FROM content_cards
+      WHERE id = ? AND workspace_id = 'default' AND deleted_at IS NULL
+    `).get(request.params.id);
+    if (!STATUS_TRANSITIONS[current.status].includes(status)) {
+      throw httpError(409, 'INVALID_STATUS_TRANSITION', '当前状态不允许直接变更到该状态', {
+        from: current.status,
+        to: status
       });
     }
     const requestedProgress = request.body.productionProgress ??

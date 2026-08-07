@@ -25,6 +25,23 @@ export function createApp({ database }) {
 
   app.disable('x-powered-by');
   app.use(express.json({ limit: '1mb' }));
+
+  // 统一 API 响应契约：成功 { ok: true, data }，失败 { ok: false, error }
+  app.use('/api', (request, response, next) => {
+    const originalJson = response.json.bind(response);
+    response.json = (payload) => {
+      if (payload && typeof payload === 'object' && !('ok' in payload)) {
+        if ('error' in payload) {
+          payload = { ok: false, ...payload };
+        } else if ('data' in payload) {
+          payload = { ok: true, ...payload };
+        }
+      }
+      return originalJson(payload);
+    };
+    next();
+  });
+
   app.use(express.static(publicDirectory));
 
   app.use('/api/health', createHealthRouter());

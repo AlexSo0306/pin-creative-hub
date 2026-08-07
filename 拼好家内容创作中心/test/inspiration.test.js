@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { migrateInspirationData, readLegacyWorkbench } from '../src/migrate-inspiration.js';
 import { createTestServer } from './helpers.js';
+
+const legacyFixturePath = fileURLToPath(
+  new URL('./fixtures/legacy-workbench.json', import.meta.url)
+);
 
 async function request(server, path, options = {}) {
   const headers = { ...options.headers };
@@ -197,7 +202,7 @@ test('filtered CSV export and legacy migration preserve real metric semantics', 
   const server = await createTestServer();
   context.after(() => server.close());
 
-  const migration = migrateInspirationData(server.database, readLegacyWorkbench());
+  const migration = migrateInspirationData(server.database, readLegacyWorkbench(legacyFixturePath));
   assert.deepEqual(migration, {
     creators: 1,
     accounts: 2,
@@ -212,7 +217,7 @@ test('filtered CSV export and legacy migration preserve real metric semantics', 
     99000
   );
 
-  const repeated = migrateInspirationData(server.database, readLegacyWorkbench());
+  const repeated = migrateInspirationData(server.database, readLegacyWorkbench(legacyFixturePath));
   assert.equal(repeated.posts, 137);
 
   const exported = await request(server, '/posts/export?platform=xiaohongshu');

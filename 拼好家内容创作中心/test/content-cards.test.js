@@ -70,6 +70,14 @@ test('content card workflow persists documents, status and publish records', asy
   });
   assert.match(plan.body.data.publishPlanBody, /发布方案/);
 
+  // 合法流转：选题池 → 脚本库
+  const scripted = await request(server, `/content-cards/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'scripted' })
+  });
+  assert.equal(scripted.body.data.status, 'scripted');
+
+  // 合法流转：脚本库 → 制作中
   const producing = await request(server, `/content-cards/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status: 'producing', productionProgress: 'editing' })
@@ -103,13 +111,18 @@ test('content card workflow persists documents, status and publish records', asy
     '平台测试标题'
   );
 
-  const movedBack = await request(server, `/content-cards/${id}/status`, {
+  // 非法转换：已发布 → 脚本库（跨级回退）应被状态机拒绝
+  const illegal = await request(server, `/content-cards/${id}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ status: 'scripted', productionProgress: 'shooting' })
+    body: JSON.stringify({ status: 'scripted' })
   });
-  assert.equal(movedBack.body.data.productionProgress, null);
+  assert.equal(illegal.response.status, 409);
+  assert.equal(illegal.body.error.code, 'INVALID_STATUS_TRANSITION');
+
+  // 非法转换被拒绝后，发布记录保持完整
+  const afterReject = await request(server, `/content-cards/${id}`);
   assert.match(
-    movedBack.body.data.publishRecords.find((record) => record.platform === 'douyin').publishUrl,
+    afterReject.body.data.publishRecords.find((record) => record.platform === 'douyin').publishUrl,
     /^https:/
   );
 

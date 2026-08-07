@@ -1,4 +1,5 @@
-FROM node:22-alpine
+# 锁定 Node 具体版本：node:sqlite 仍是实验特性，避免 22.x 小版本升级引入行为变化
+FROM node:22.16-alpine
 
 WORKDIR /app
 
