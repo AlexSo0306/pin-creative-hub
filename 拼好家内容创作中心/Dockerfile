@@ -1,6 +1,5 @@
-# 使用 22-alpine 浮动标签（NAS 拉取锁定 tag 镜像超时）：node:sqlite 在 22.x 范围内稳定，
-# 本地开发环境锁定 node 22.16（见 package.json engines >=22.13）
-FROM node:22-alpine
+# 锁定 Node 具体版本：node:sqlite 仍是实验特性，避免 22.x 小版本升级引入行为变化
+FROM node:22.16-alpine
 
 WORKDIR /app
 
