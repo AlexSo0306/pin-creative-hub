@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="framer">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>拼好家 · 运营创作中心</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">拼</span>
+        <span>
+          <strong>拼好家</strong>
+          <small>运营创作中心</small>
+        </span>
+      </div>
+
+      <nav class="main-nav" aria-label="主要导航">
+        <a href="#/dashboard" data-route="dashboard"><span class="nav-icon">⌂</span>今日工作台</a>
+        <a href="#/inspiration" data-route="inspiration"><span class="nav-icon">⌁</span>灵感雷达</a>
+        <a href="#/content-plan" data-route="content-plan"><span class="nav-icon">▦</span>内容计划</a>
+        <a href="#/review" data-route="review"><span class="nav-icon">↗</span>数据复盘</a>
+        <a href="#/accounts" data-route="accounts"><span class="nav-icon">◎</span>账号矩阵</a>
+        <a href="#/knowledge" data-route="knowledge"><span class="nav-icon">◇</span>知识资产</a>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="theme-control" aria-label="界面主题">
+        <span>界面主题</span>
+        <div class="theme-options" role="radiogroup">
+          <button type="button" data-theme-value="framer" aria-label="深色主题" title="深色主题"></button>
+          <button type="button" data-theme-value="fluent" aria-label="浅色主题" title="浅色主题"></button>
+        </div>
+      </div>
+
+      <div class="sidebar-status">
+        <span class="status-dot"></span>
+        <span>SQLite 已连接</span>
+        <small>v0.1.0</small>
+      </div>
+    </aside>
+
+    <main class="app-main" id="app" tabindex="-1">
+      <div class="page-loading" role="status">正在载入工作台…</div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

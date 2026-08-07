@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "知识资产-v2.html",
+  "entry": "知识资产-v2.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-08-05T13:31:39.558Z",
+  "updatedAt": "2026-08-05T13:31:39.558Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

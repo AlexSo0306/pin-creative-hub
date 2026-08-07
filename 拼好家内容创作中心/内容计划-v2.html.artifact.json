@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "内容计划-v2.html",
+  "entry": "内容计划-v2.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-08-05T10:19:43.160Z",
+  "updatedAt": "2026-08-05T10:19:43.160Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

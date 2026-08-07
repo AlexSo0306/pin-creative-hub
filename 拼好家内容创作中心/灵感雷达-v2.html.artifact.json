@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "灵感雷达-v2.html",
+  "entry": "灵感雷达-v2.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-08-05T09:14:29.882Z",
+  "updatedAt": "2026-08-05T09:14:29.882Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

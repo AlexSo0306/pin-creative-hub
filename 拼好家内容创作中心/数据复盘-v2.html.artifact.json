@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "数据复盘-v2.html",
+  "entry": "数据复盘-v2.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-08-05T10:49:39.689Z",
+  "updatedAt": "2026-08-05T10:49:39.689Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

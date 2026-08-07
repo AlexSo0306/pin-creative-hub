@@ -1,0 +1,19 @@
+services:
+  workbench:
+    build: .
+    container_name: pinhaojia-content-workbench
+    ports:
+      - "4174:4174"
+    volumes:
+      - ./data:/app/data
+    environment:
+      NODE_ENV: production
+      PORT: 4174
+      DB_PATH: /app/data/workbench.db
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4174/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped

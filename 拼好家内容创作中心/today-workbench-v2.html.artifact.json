@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "今日工作台 v2.0 · 运营指挥中心",
+  "entry": "today-workbench-v2.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "primary": true,
+  "createdAt": "2026-08-05T07:43:39.153Z",
+  "updatedAt": "2026-08-05T07:43:39.157Z",
+  "sourceSkillId": "agent-browser",
+  "designSystemId": "framer",
+  "metadata": {
+    "identifier": "today-workbench-v2",
+    "artifactType": "text/html",
+    "inferred": false
+  }
+}
