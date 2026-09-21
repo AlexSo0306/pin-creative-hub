@@ -73,3 +73,16 @@ B 建分支 → 改前端 → 自查 → 更新日志 → push
 - ⚠ **合并顺序提醒**：本分支从 `main`(41023fe) 切出，`feature/dev-dashboard-today`
   也在改本文件（110 行 vs main 46 行）。若两者都合 main，**本文件的日志段会冲突**，
   解决时取两边新增内容即可（纯追加，无逻辑冲突）。
+- 🐞 **补记（同日 16:0x，修掉一个自测漏掉的真 bug）**：`mascot.css` 里写的是
+  `.pm-dock > .pm-mascot`（**直接**子元素），但实际 DOM 是 `.pm-dock > div > .pm-mascot`
+  —— 引擎自己创建根节点，外面还套了一层挂载容器。选择器不匹配 →
+  `.pm-mascot` 从 `.pm-dock` 继承到 `pointer-events: none` → **挂件完全点不动**。
+  **为什么上一轮没测出来**：只验了 `window.mascotDock.setState()` 这个 JS API，
+  没做真实点击。而 `el.click()` 绕过 hit-test 仍然能通 → 单看 JS 层一切正常。
+  → **教训：验收必须打「真实指针/触摸事件」这一层**（`Input.dispatchMouseEvent` /
+  `Input.dispatchTouchEvent`），程序化 `.click()` 不能替代它。
+  → 已改为后代选择器 `.pm-dock .pm-mascot`（两处：主规则 + `prefers-reduced-motion`）。
+  桌面真实点击、移动端 `dispatchTouchEvent` 三连点（开→关→开）均已实测通过。
+- 📱 **移动端实测（`Emulation.setDeviceMetricsOverride` 390×844，不是靠 `--window-size`）**：
+  挂件 92px 时占屏宽 24%、会压住卡片右下角内容 → **已缩到 76px（19%）**；
+  距右 10px、距底 66px（让开居中 toast）；与 toast 不重叠、页面零横向溢出、零控制台错误。
