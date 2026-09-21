@@ -46,6 +46,42 @@ B 建分支 → 改前端 → 自查 → 更新日志 → push
 -->
 
 ---
+### 2026-09-21 18:50 · 机器B · 锅宝挂件支持拖拽（Alex 定的移动端方案）+ 真实应用复验
+
+- **决策**：移动端 76px 挂件会压住卡片内容（实测压住「本周发布进度」的星期行与
+  「待补表现 1 条」）→ **Alex 定「改成可拖拽」**；墨色**保持纯色**，不开渐变例外。
+- 改动（只动两个文件，引擎一行没碰）：
+  - `public/js/components/mascot-dock.js`：指针拖拽 + 位置持久化 + `resetPos()` 逃生口
+  - `public/css/mascot.css`：`touch-action: none`（不加就变成页面滚动，根本拖不动）、
+    拖拽态样式、气泡改为绝对定位
+- **拖拽与点击的冲突**是这里唯一的难点（两者都从 `pointerdown` 开始）：
+  用 6px 位移阈值区分；过阈值才算拖拽，`pointerup` 时置 `suppressClick` 吃掉紧随的 click。
+  `suppressClick` **在每次 pointerdown 复位** —— 否则某次拖拽没紧跟 click（pointercancel）
+  会把下一次真实点击误吞。专门写了断言守它：**「拖拽不误触发点击」**（鼠标 + 触摸各一条）。
+- **顺手抓到并修掉一个真 bug**：气泡原本是 `.pm-dock` 的 flex 子元素，
+  它的宽度会**把挂件推着走**（有文字时宽、没文字时窄）→
+  「拖到某处 → 刷新后挂件位置偏移」，实测差 **122px**。
+  改为绝对定位后，存储的位置精确等于挂件位置，刷新后分毫不差。
+- **改绝对定位后又踩一个坑**：只给 `max-width` 时，abspos 的宽度按 shrink-to-fit 算，
+  而可用宽度被 `.pm-dock` 的固定宽度压成负数 → **气泡塌到最小内容宽（实测 36px）**。
+  正解是显式 `width: max-content` + `max-width` 收口（194px）。
+  → 附带补了个边界：挂件贴左边时气泡**翻到右侧**（`is-flipped`），否则会飘出屏幕外。
+- **验证**：`verify-plugin.mjs` **37/37**（从 25 条加到 37 条），新增 12 条覆盖
+  鼠标拖拽 / 触摸拖拽 / 不误触发点击 / 位置持久化 / 刷新还原 / 越界夹取 /
+  `resetPos()` / 气泡不塌宽 / 气泡翻边。
+  **全部打在真实 Express 应用上**（`DB_PATH` 指一次性副本，真实库未动）。
+  实拍：`集成-气泡展开.png`、`集成-手机390-拖后.png`。
+- ⚠ **两条给对侧的纪律**：
+  1. **绝不对真实库直接 `node server.js`** —— `createDatabase()` 会执行 `schema.sql`
+     **并 `seedDatabase()`**（`src/db.js:21`）。用 `DB_PATH` 指一次性副本
+     （`src/db.js:11` 支持），实测真实库 checksum 与 mtime 均未变。
+  2. **后台起服务要多等**：我 4s / 10s 各探一次都判「起不来」（无输出、无端口、无库文件），
+     实际启动要 ~15s。**又一次是测量太早，不是被测对象有问题。**
+- **下一步**：拖拽位置存在 `localStorage['phj-workbench-mascot-pos']`，
+  与「隐藏」开关（`…-mascot = 'off'`）是两个独立的键。接真实业务数据仍**不要改本文件**，
+  由页面调 `window.mascotDock.setState/setShape/setInk/say`；拖飞了调 `resetPos()`。
+
+---
 ### 2026-09-21 17:05 · 机器B · 挂件引擎按参考站点 clean-room 重写为 v2（39 状态 / 8 形状 / 25 眼型 / 11 墨色）
 
 - **背景**：Alex 给了参考站点 `https://grok-icon-study.vercel.app/`，要求「不用自己发挥，照现成的参考对齐」。

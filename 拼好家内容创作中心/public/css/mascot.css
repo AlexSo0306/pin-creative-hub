@@ -18,8 +18,19 @@
   z-index: 40;
   display: flex;
   align-items: flex-end;
-  gap: 10px;
   pointer-events: none;
+
+  /* 宽度锁死 = 挂件宽度。气泡是绝对定位（见下），不参与这里的高度/宽度计算，
+     否则「拖到某处 → 刷新后挂件偏移」：气泡有文字时宽、没文字时窄，会把挂件推着走。
+     实测差过 122px。 */
+  width: calc(112px * var(--pm-scale, 1));
+
+  /* 拖拽必需：不禁掉 touch-action，触屏上手指一动就变成页面滚动，挂件拖不动。
+     代价是「以挂件为起点」的手势不再能滚动页面 —— 76px 的小方块，可以接受。 */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 
   /* 深色画布：白墨 + 黑色挖空眼 */
   --gb-scheme: dark;
@@ -46,6 +57,24 @@
   transform: translateY(-1px);
 }
 
+/* 拖拽中。必须排在 :hover 之后 —— 两者特异性相同（3 个类），靠顺序决定胜负。
+   拖拽时还要抬 z-index，否则挂件被拖到别的层下面会「消失在手里」。 */
+.pm-dock.is-dragging {
+  z-index: 60;
+}
+
+.pm-dock.is-dragging .gb-mascot {
+  cursor: grabbing;
+  transform: none;
+  transition: none;
+}
+
+.pm-dock.is-dragging .pm-dock-bubble {
+  /* 拖拽时气泡跟着飘会干扰判断，直接淡掉 */
+  opacity: 0;
+  transition: none;
+}
+
 .pm-dock-holder {
   width: calc(112px * var(--pm-scale, 1));
   height: calc(112px * var(--pm-scale, 1));
@@ -69,10 +98,18 @@
 /* ── 提示条：等宽字体 + 细边框，与工作台数据语气一致 ───────── */
 
 .pm-dock-bubble {
-  pointer-events: auto;
+  /* 绝对定位：落在挂件左侧（right: 100% + 10px 的间隙），
+     不参与 .pm-dock 的 flex 布局 —— 挂件的位置必须只由它自己决定。 */
+  position: absolute;
+  right: calc(100% + 10px);
+  bottom: 16px;
+  /* ⚠ 必须显式 width: max-content。绝对定位下只给 max-width 会按 shrink-to-fit 算，
+     而可用宽度被 .pm-dock 的固定宽度压成负数 → 气泡塌到最小内容宽（实测只剩 36px）。
+     max-content + max-width 才是「按内容自适应，超长才换行」。 */
+  width: max-content;
   max-width: 210px;
+  pointer-events: auto;
   padding: 7px 11px;
-  margin-bottom: 16px;
   background: var(--surface, #090909);
   border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
@@ -83,6 +120,13 @@
   opacity: 0;
   transform: translateY(4px);
   transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* 挂件被拖到靠左边时，气泡翻到挂件右侧 —— 否则它会飘到屏幕外看不见。
+   由 JS 按 holder 的 left 是否放得下决定（见 mascot-dock.js 的 placeBubble）。 */
+.pm-dock-bubble.is-flipped {
+  right: auto;
+  left: calc(100% + 10px);
 }
 
 .pm-dock-bubble.is-on {
@@ -97,7 +141,7 @@
   .pm-dock {
     right: 10px;
     bottom: 66px;
-    gap: 6px;
+    width: calc(76px * var(--pm-scale, 1));
   }
   /* 390px 屏上 92px 占 24% 宽、会压住卡片右下角内容；76px 降到 19% */
   .pm-dock-holder {
@@ -105,10 +149,15 @@
     height: calc(76px * var(--pm-scale, 1));
   }
   .pm-dock-bubble {
+    right: calc(100% + 6px);
+    bottom: 10px;
     max-width: 140px;
     padding: 6px 9px;
-    margin-bottom: 10px;
     font-size: 11px;
+  }
+  .pm-dock-bubble.is-flipped {
+    right: auto;
+    left: calc(100% + 6px);
   }
 }
 
