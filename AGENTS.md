@@ -36,6 +36,9 @@
 | `public/js/pages/*.js` | 每模块页面逻辑（dashboard/inspiration/accounts/…） | 前端 |
 | `public/js/store.js` `api.js` | 全局状态 / API 封装 | 前端 |
 | `public/css/app.css` | 全局样式 | 前端 |
+| `public/js/components/mascot*` | 「锅宝」角色挂件：引擎在 `mascot/`（6 模块）、挂载在 `mascot-dock.js`、旧路径兼容入口 `mascot.js` | 前端 |
+| `public/css/mascot.css` | 挂件样式（`--gb-scheme` / `--gb-bg` / `--gb-eye` 三个变量的宿主侧） | 前端 |
+| `tools/mascot-verify/` | 挂件验收工具链（引擎自测 + 集成验证 + 演示台/接触表）。**不是产品代码**，见其 README | 前端 / 测试 |
 | `docs/` `拼好家内容创作中心/*-Feature-Spec.md` | PRD 与各模块 Feature Spec | 需求 / 产品 |
 
 ## 4. 开发循环（两台电脑都遵守）

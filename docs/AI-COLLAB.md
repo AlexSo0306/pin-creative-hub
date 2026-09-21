@@ -46,6 +46,31 @@ B 建分支 → 改前端 → 自查 → 更新日志 → push
 -->
 
 ---
+### 2026-09-21 19:00 · 机器B · 挂件验收工具链入库（`tools/mascot-verify/`）
+
+- **动机**：引擎与 30+37 条断言此前只存在于工作区沙盒，**没有任何版本控制**；
+  另一台机器既看不到验证方法，也没法复跑。
+- **新增** `拼好家内容创作中心/tools/mascot-verify/`：
+  - `verify.mjs`（引擎自测 30 条，走 `file://`，不用起服务）
+  - `verify-plugin.mjs`（工作台集成 37 条，要起真实应用）
+  - `demo.html` / `sheet.html`（演示台与接触表，人工排查用）
+  - `README.md`（跑法 + 为什么用无头 Chrome 而不是单测）
+  - `shots/`（跑一次自动生成的截图，就是证据）
+- **引擎只有一份**：演示台/接触表直接 `import "../../public/js/components/mascot/index.js"`，
+  **不在 tools/ 里放引擎副本** —— 否则引擎一改、演示台还跑旧代码，两边必然漂移。
+- `AGENTS.md` §3 目录地图补了 3 行（挂件 / 挂件样式 / 工具链），另一台机器能直接找到。
+- **搬运后复跑确认**（位置变了就得重验，这是纪律）：
+  - `verify.mjs` **30/30** —— 途中被自己的静态护栏拦下一次：它按脚本同目录读引擎文件，
+    搬家后引擎在 `public/` 下 → `ENOENT core.js`。改成 `../../public/js/components/mascot/` 后通过。
+  - `verify-plugin.mjs` **37/37**，打在真实 Express 应用上（`DB_PATH` 一次性副本）
+  - ⚠ 无头 Chrome 在沙箱里会有一批 `file-write-unlink` 拦截（RLZ / GoogleUpdater 的
+    `~/Library` 写入），那是 **Chrome 自己的后台行为**，不是断言失败 —— 别被它的红字带偏。
+- ⚠ **给对侧的提醒（本机专属，不在仓库里）**：`~/WorkBuddy/拼好家创作运营中心/` 那个目录
+  **是个没有任何提交的 git 仓库，而它的 `origin` 指向本仓库的 URL**
+  （`github.com/AlexSo0306/pin-creative-hub`）。在那里 `git add . && git push`
+  会把一个无关的根提交推到本仓库 `main`。**别在那里执行任何 git 写操作。**
+
+---
 ### 2026-09-21 18:50 · 机器B · 锅宝挂件支持拖拽（Alex 定的移动端方案）+ 真实应用复验
 
 - **决策**：移动端 76px 挂件会压住卡片内容（实测压住「本周发布进度」的星期行与

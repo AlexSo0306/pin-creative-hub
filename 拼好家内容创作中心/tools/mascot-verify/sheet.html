@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>锅宝 v2 · 接触表</title>
+<style>
+  :root { color-scheme: light; --bg: #f6f7f9; --panel: #fff; --fg: #1b1d21; --dim: #7b828c; --line: #e6e8ec; --gb-scheme: light; }
+  html[data-theme="dark"] { color-scheme: dark; --bg: #16181d; --panel: #1e2126; --fg: #ecedf0; --dim: #9aa1ab; --line: #2c3037; --gb-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 12px/1.4 -apple-system, "PingFang SC", Arial, sans-serif; padding: 18px 20px 40px; }
+  h2 { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--dim); margin: 22px 0 10px; font-weight: 600; }
+  h2:first-of-type { margin-top: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+  .cell { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+          padding: 8px 6px 6px; display: flex; flex-direction: column; align-items: center; --gb-bg: var(--panel); }
+  .cell .box { width: var(--cell, 84px); height: var(--cell, 84px); }
+  .cell .box svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .cell .cap { font-size: 10.5px; color: var(--dim); margin-top: 5px; text-align: center;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(calc(var(--cell, 84px) + 28px), 1fr)); }
+  .gb-fx-back, .gb-fx-front { pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+/* 直接引用 public/ 下已提交的引擎 —— 不在这里放第二份副本，避免两边漂移。 */
+import { createMascot, GROUPS, SHAPE_NAMES, EYE_NAMES, INK_NAMES, INK } from "../../public/js/components/mascot/index.js";
+
+/* ?cell=200&only=excited,playful   → 放大单看某几个状态（排查视觉问题用）
+   only 对状态 / 形状 / 眼型 三组都生效：命中的那几组才渲染，组内只留命中的项。
+   例：?cell=300&only=pot,capsule   → 放大对比锅和胶囊（排查「两个形状看起来一样」用） */
+const q = new URLSearchParams(location.search);
+if (q.get("cell")) document.documentElement.style.setProperty("--cell", q.get("cell") + "px");
+const ONLY = (q.get("only") || "").split(",").map((s) => s.trim()).filter(Boolean);
+const hit = (n) => !ONLY.length || ONLY.includes(n);
+
+const root = document.getElementById("root");
+const instances = [];
+
+function section(title) {
+  const h = document.createElement("h2");
+  h.textContent = title;
+  root.appendChild(h);
+  const g = document.createElement("div");
+  g.className = "grid";
+  root.appendChild(g);
+  return g;
+}
+function cell(grid, cap) {
+  const c = document.createElement("div");
+  c.className = "cell";
+  const b = document.createElement("div");
+  b.className = "box";
+  const t = document.createElement("div");
+  t.className = "cap";
+  t.textContent = cap;
+  c.appendChild(b); c.appendChild(t);
+  grid.appendChild(c);
+  return b;
+}
+
+/* 全部 39 个状态 */
+for (const g of GROUPS) {
+  const list = g.states.filter(hit);
+  if (!list.length) continue;
+  const grid = section("状态 · " + g.label);
+  for (const s of list) {
+    const box = cell(grid, s);
+    instances.push(createMascot(box, { state: s, shape: "dango", ink: "ink" }));
+  }
+}
+
+/* 8 个形状（都用 idle 态） */
+{
+  const list = SHAPE_NAMES.filter(hit);
+  if (list.length) {
+    const grid = section("形状");
+    for (const n of list) {
+      const box = cell(grid, n);
+      instances.push(createMascot(box, { state: "idle", shape: n, ink: "ink" }));
+    }
+  }
+}
+
+/* 25 个眼型（固定住） */
+{
+  const list = EYE_NAMES.filter(hit);
+  if (list.length) {
+    const grid = section("眼型");
+    for (const n of list) {
+      const box = cell(grid, n);
+      instances.push(createMascot(box, { state: "idle", shape: "dango", ink: "ink", eye: n }));
+    }
+  }
+}
+
+/* 11 个墨色 */
+{
+  const list = INK_NAMES.filter(hit);
+  if (list.length) {
+    const grid = section("墨色");
+    for (const n of list) {
+      const box = cell(grid, INK[n].label);
+      instances.push(createMascot(box, { state: "idle", shape: "dango", ink: n }));
+    }
+  }
+}
+
+window.__count = instances.length;
+window.__instances = instances;
+window.__ready = true;
+</script>
+</body>
+</html>
