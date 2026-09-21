@@ -36,7 +36,8 @@
 | `public/js/pages/*.js` | 每模块页面逻辑（dashboard/inspiration/accounts/…） | 前端 |
 | `public/js/store.js` `api.js` | 全局状态 / API 封装 | 前端 |
 | `public/css/app.css` | 全局样式 | 前端 |
-| `docs/` `拼好家内容创作中心/*-Feature-Spec.md` | PRD 与各模块 Feature Spec | 需求 / 产品 |
+| `docs/specs/` | **规格文档唯一存放处**：各模块 Feature Spec + 设计规范 / 品牌规范 + 现状基线（as-built） | 需求 / 产品 |
+| `docs/plans/` `docs/adr/` | 开发计划 / 架构决策记录 | 需求 / 产品 |
 
 ## 4. 开发循环（两台电脑都遵守）
 
