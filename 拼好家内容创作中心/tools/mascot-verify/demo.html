@@ -89,7 +89,7 @@
   <div class="layout" data-page-node-id="MTRuOF9J2udMlTxig6tuVV">
     <div class="stage" data-page-node-id="m7wCLBNABcuGTmRe8NYs9C">
       <div class="stage-inner" id="stage" data-page-node-id="0Bqdo6BJmSmEMCEEK3NYgD"></div>
-      <div class="stage-label" id="label" data-page-node-id="Z2nrGLLp87Sy4nKurqpJmb">待机 idle</div>
+      <div class="stage-label" id="label" data-page-node-id="Z2nrGLLp87Sy4nKurqpJmb">待机</div>
       <div class="stage-meta" id="meta" data-page-node-id="k0wg2PWwGAIUscVjHpF2Cw">团子 · 墨</div>
       <div class="stage-row" data-page-node-id="bnTobCg3j27KRsNvAOFyc2">
         <button class="act" id="btnTheme" data-page-node-id="WZcqNHigUwoLmX15oS47wC">切换主题</button>
@@ -129,10 +129,15 @@
 <script type="module">
 /* 直接引用 public/ 下已提交的引擎 —— 不在这里放第二份副本，
    否则引擎一改、演示台还跑旧代码，两边就漂移了。 */
-import { createMascot, GROUPS, SHAPE_NAMES, EYE_NAMES, INK_NAMES, INK } from "../../public/js/components/mascot/index.js";
+import { createMascot, GROUPS, SHAPE_NAMES, SHAPE_LABELS, EYE_NAMES, EYE_LABELS,
+  STATE_LABELS, INK_NAMES, INK } from "../../public/js/components/mascot/index.js";
 
 const stage = document.getElementById("stage");
 const mascot = createMascot(stage, { state: "idle", shape: "dango", ink: "ink" });
+
+/* 按钮上一律印中文：英文 id 只作为「值」用（setState/setShape 的参数、dataset 里的键），
+   不作为「字」。标签表来自引擎，见 index.js 的导出说明。 */
+const L = (map, id) => map[id] || id;   // 表里万一缺项，退回 id 而不是渲染出 undefined
 
 /* ── 状态按钮 ── */
 const sg = document.getElementById("stateGroups");
@@ -146,13 +151,14 @@ for (const g of GROUPS) {
   for (const s of g.states) {
     const b = document.createElement("button");
     b.className = "chip";
-    b.textContent = s;
+    b.dataset.id = s;                      // 真实值放 dataset，文案放 textContent
+    b.textContent = L(STATE_LABELS, s);
     b.setAttribute("aria-pressed", String(s === "idle"));
     b.onclick = () => {
       mascot.setState(s);
       for (const o of sg.querySelectorAll(".chip")) o.setAttribute("aria-pressed", "false");
       b.setAttribute("aria-pressed", "true");
-      document.getElementById("label").textContent = s;
+      document.getElementById("label").textContent = L(STATE_LABELS, s);
     };
     box.appendChild(b);
   }
@@ -164,7 +170,8 @@ const sh = document.getElementById("shapes");
 for (const n of SHAPE_NAMES) {
   const b = document.createElement("button");
   b.className = "chip";
-  b.textContent = n;
+  b.dataset.id = n;
+  b.textContent = L(SHAPE_LABELS, n);
   b.setAttribute("aria-pressed", String(n === "dango"));
   b.onclick = () => {
     mascot.setShape(n);
@@ -181,7 +188,8 @@ let eyeOn = null;
 for (const n of EYE_NAMES) {
   const b = document.createElement("button");
   b.className = "chip";
-  b.textContent = n;
+  b.dataset.id = n;
+  b.textContent = L(EYE_LABELS, n);
   b.onclick = () => {
     if (eyeOn === n) {
       eyeOn = null;
@@ -190,7 +198,11 @@ for (const n of EYE_NAMES) {
       eyeOn = n;
       mascot.setEye(n);
     }
-    for (const o of ey.querySelectorAll(".chip")) o.setAttribute("aria-pressed", String(o.textContent === eyeOn));
+    /* ⚠ 高亮比对必须走 dataset.id，不能拿 textContent 比 ——
+       文案改成中文后，textContent 与 id 不再相等，比了会全灭。 */
+    for (const o of ey.querySelectorAll(".chip")) {
+      o.setAttribute("aria-pressed", String(o.dataset.id === eyeOn));
+    }
   };
   ey.appendChild(b);
 }
@@ -200,7 +212,9 @@ const ik = document.getElementById("inks");
 for (const n of INK_NAMES) {
   const b = document.createElement("button");
   b.className = "chip swatch";
+  b.dataset.id = n;
   b.title = INK[n].label;
+  b.setAttribute("aria-label", `墨色：${INK[n].label}`);   // 纯色圆点没有文字，靠 aria-label 可读
   b.style.background = `linear-gradient(135deg, ${INK[n].lightFrom}, ${INK[n].lightTo})`;
   b.setAttribute("aria-pressed", String(n === "ink"));
   b.onclick = () => {
@@ -213,7 +227,8 @@ for (const n of INK_NAMES) {
 }
 
 function updateMeta() {
-  document.getElementById("meta").textContent = `${mascot.shape} · ${mascot.ink}`;
+  document.getElementById("meta").textContent =
+    `${L(SHAPE_LABELS, mascot.shape)} · ${INK[mascot.ink]?.label || mascot.ink}`;
 }
 
 /* ── 工具按钮 ── */

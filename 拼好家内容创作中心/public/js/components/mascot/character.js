@@ -740,9 +740,18 @@ export class Character {
         fade = Dke(clamp(io0 / 0.5, 0, 1));
       }
 
-      /* 微颤 + 视线 + 指针 */
-      let jx = (1 - 0) * (Math.sin(now * 0.042 + i) * 1.4 + Math.sin(now * 0.001 + i * 2) * 0.5);
-      let jy = Math.sin(now * 0.058 + i) * 0.9;
+      /* 视线 + 指针（不再叠加「微颤」）
+         这里原来还有一层高频噪声，读起来就是「眼睛在抖」：
+           Math.sin(now * 0.042) → 周期 ≈150ms（≈6.7Hz），振幅 1.4
+           Math.sin(now * 0.058) → 周期 ≈108ms（≈9.2Hz），振幅 0.9
+         两者都以**毫秒**为自变量，所以频率落在最刺眼的 6–9Hz 区间；
+         左右眼还差一个相位（+i），视觉上是两只眼各抖各的。
+         更糟的是它经 vl → liveSpan → 横向夹取边界被放大成跳动：
+         纵向抖 0.9 会让 vl 变化，夹取区间 lo/hi 随之跳，眼睛就整块位移。
+         角色的「活感」由视线弹簧（gazeX/gazeY，2–8s 换一次目标，弹簧平滑）
+         和指针跟随提供，不需要这层噪声。 */
+      let jx = 0;
+      let jy = 0;
       const zl = Rn(0.16);
       this.pointer.x += (this.pointer.tx - this.pointer.x) * zl;
       this.pointer.y += (this.pointer.ty - this.pointer.y) * zl;

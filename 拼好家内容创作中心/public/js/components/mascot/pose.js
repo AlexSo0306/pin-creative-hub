@@ -20,6 +20,26 @@ export const GROUPS = [
 
 export const ALL_STATES = GROUPS.flatMap((g) => g.states);
 
+/* 状态中文名 —— 给界面用（按钮 / 标签）。
+   与 ALL_STATES 一一对应；缺一个，界面上就会出现英文 id。
+   ⚠ 这是「按钮文案」的单一事实来源：演示台、接触表、任何设置面板都从这里取，
+   不要各自硬编码一份，否则改一处漏一处。
+   注：挂件气泡里的说法（mascot-dock.js 的 STATE_LINE）是句子级文案，
+   如「在写今天的内容计划」，与这里的短标签不同，故两份并存、不合并。 */
+export const STATE_LABELS = {
+  sleeping: "沉睡", waking: "醒来", idle: "待机", listening: "聆听",
+  thinking: "思考", searching: "搜索", working: "干活",
+  excited: "兴奋", surprised: "惊讶", suspicious: "怀疑", angry: "生气",
+  drowsy: "困倦", happy: "开心", curious: "好奇", confused: "困惑",
+  bored: "无聊", proud: "得意", shy: "害羞", sad: "难过",
+  laughing: "大笑", scared: "害怕", playful: "顽皮", celebrate: "庆祝",
+  orbit: "环绕", radar: "雷达", progress: "进度",
+  spawning: "出场", humming: "哼唱", loading: "加载", dictating: "听写",
+  writing: "书写", sending: "发送", receiving: "接收", uploading: "上传",
+  notifying: "提醒", alerting: "告警", dragging: "拖拽", bouncing: "弹跳",
+  "powering-down": "关机",
+};
+
 /* ─────────────── 弹簧参数 [frequency, dampingRatio] ─────────────── */
 
 export const SPRINGS = {

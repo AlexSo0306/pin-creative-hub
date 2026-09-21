@@ -5,14 +5,19 @@
  *   options  { state, shape, ink, eye, followPointer, onSay }
  *
  * 控制器方法：setState / setShape / setInk / setEye / unpinEye / say / pause / destroy
- * 另有 GROUPS / SHAPE_NAMES / EYE_NAMES / INK_NAMES 供 UI 构建选择器。
+ * 另有 GROUPS / SHAPE_NAMES / EYE_NAMES / INK_NAMES 供 UI 构建选择器，
+ * 以及对应的中文标签表 STATE_LABELS / SHAPE_LABELS / EYE_LABELS（INK 的中文名在 INK[n].label）。
+ * **界面按钮一律取标签表，不要把英文 id 直接印在按钮上。**
  */
 
 import { Character } from "./character.js";
-import { GROUPS, ALL_STATES } from "./pose.js";
-import { SHAPE_NAMES, EYE_NAMES, INK_NAMES, INK } from "./art.js";
+import { GROUPS, ALL_STATES, STATE_LABELS } from "./pose.js";
+import { SHAPE_NAMES, SHAPE_LABELS, EYE_NAMES, EYE_LABELS, INK_NAMES, INK } from "./art.js";
 
-export { GROUPS, ALL_STATES, SHAPE_NAMES, EYE_NAMES, INK_NAMES, INK };
+export {
+  GROUPS, ALL_STATES, STATE_LABELS,
+  SHAPE_NAMES, SHAPE_LABELS, EYE_NAMES, EYE_LABELS, INK_NAMES, INK,
+};
 
 export const VERSION = "2.0.0";
 

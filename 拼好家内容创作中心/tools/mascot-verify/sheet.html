@@ -26,15 +26,17 @@
 <div id="root"></div>
 <script type="module">
 /* 直接引用 public/ 下已提交的引擎 —— 不在这里放第二份副本，避免两边漂移。 */
-import { createMascot, GROUPS, SHAPE_NAMES, EYE_NAMES, INK_NAMES, INK } from "../../public/js/components/mascot/index.js";
+import { createMascot, GROUPS, SHAPE_NAMES, SHAPE_LABELS, EYE_NAMES, EYE_LABELS,
+  STATE_LABELS, INK_NAMES, INK } from "../../public/js/components/mascot/index.js";
 
 /* ?cell=200&only=excited,playful   → 放大单看某几个状态（排查视觉问题用）
    only 对状态 / 形状 / 眼型 三组都生效：命中的那几组才渲染，组内只留命中的项。
-   例：?cell=300&only=pot,capsule   → 放大对比锅和胶囊（排查「两个形状看起来一样」用） */
+   例：?cell=300&only=pot,capsule   → 放大对比锅和胶囊（排查「两个形状看起来一样」用）
+   ⚠ only 同时接受**英文 id 与中文名**：卡片上现在印中文，用户会照着中文抄。 */
 const q = new URLSearchParams(location.search);
 if (q.get("cell")) document.documentElement.style.setProperty("--cell", q.get("cell") + "px");
 const ONLY = (q.get("only") || "").split(",").map((s) => s.trim()).filter(Boolean);
-const hit = (n) => !ONLY.length || ONLY.includes(n);
+const hit = (id, label) => !ONLY.length || ONLY.includes(id) || ONLY.includes(label);
 
 const root = document.getElementById("root");
 const instances = [];
@@ -63,22 +65,22 @@ function cell(grid, cap) {
 
 /* 全部 39 个状态 */
 for (const g of GROUPS) {
-  const list = g.states.filter(hit);
+  const list = g.states.filter((s) => hit(s, STATE_LABELS[s]));
   if (!list.length) continue;
   const grid = section("状态 · " + g.label);
   for (const s of list) {
-    const box = cell(grid, s);
+    const box = cell(grid, STATE_LABELS[s] || s);
     instances.push(createMascot(box, { state: s, shape: "dango", ink: "ink" }));
   }
 }
 
 /* 8 个形状（都用 idle 态） */
 {
-  const list = SHAPE_NAMES.filter(hit);
+  const list = SHAPE_NAMES.filter((n) => hit(n, SHAPE_LABELS[n]));
   if (list.length) {
     const grid = section("形状");
     for (const n of list) {
-      const box = cell(grid, n);
+      const box = cell(grid, SHAPE_LABELS[n] || n);
       instances.push(createMascot(box, { state: "idle", shape: n, ink: "ink" }));
     }
   }
@@ -86,11 +88,11 @@ for (const g of GROUPS) {
 
 /* 25 个眼型（固定住） */
 {
-  const list = EYE_NAMES.filter(hit);
+  const list = EYE_NAMES.filter((n) => hit(n, EYE_LABELS[n]));
   if (list.length) {
     const grid = section("眼型");
     for (const n of list) {
-      const box = cell(grid, n);
+      const box = cell(grid, EYE_LABELS[n] || n);
       instances.push(createMascot(box, { state: "idle", shape: "dango", ink: "ink", eye: n }));
     }
   }
@@ -98,7 +100,7 @@ for (const g of GROUPS) {
 
 /* 11 个墨色 */
 {
-  const list = INK_NAMES.filter(hit);
+  const list = INK_NAMES.filter((n) => hit(n, INK[n].label));
   if (list.length) {
     const grid = section("墨色");
     for (const n of list) {

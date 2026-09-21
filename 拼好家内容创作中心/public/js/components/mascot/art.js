@@ -174,6 +174,12 @@ for (const [name, def] of Object.entries(SHAPE_DEF)) {
 
 export const SHAPE_NAMES = Object.keys(SHAPES);
 
+/* 形状中文名 —— 与 SHAPE_NAMES 一一对应（界面按钮文案的单一事实来源） */
+export const SHAPE_LABELS = {
+  dango: "团子", bean: "豆", egg: "蛋", drop: "水滴",
+  leaf: "叶", cube: "方糖", capsule: "胶囊", pot: "锅",
+};
+
 /* 形状显示体量补偿：环实际只占 229/259，乘 VIEW_SCALE 才刚好填满 viewBox */
 export const VIEW = { minX: -15, minY: -15, width: 259, height: 259 };
 export const VIEW_SCALE = VIEW.width / (R_BASE * 2);
@@ -258,6 +264,18 @@ for (const [name, fn] of Object.entries(DENSE_DEF)) {
 }
 
 export const EYE_NAMES = Object.keys(EYE_UNITS);
+
+/* 眼型中文名 —— 与 EYE_NAMES 一一对应（界面按钮文案的单一事实来源）。
+   注意两处刻意的区分：
+   · 眼型 drop 取「泪滴」、形状 drop 取「水滴」，避免接触表两个分区里同名不同物；
+   · crescent（大缺口月牙）取「月牙」、moon（稠密轮廓残月）取「残月」，两者形状相近但不同源。 */
+export const EYE_LABELS = {
+  round: "圆", tall: "竖长", wide: "扁圆", dot: "圆点", squint: "眯眼",
+  line: "横线", happy: "弯笑", sleepy: "半合", proud: "傲视", sparkle: "闪光",
+  star: "星星", dizzy: "眩晕", crescent: "月牙", almond: "杏眼", pinch: "细缝",
+  angry: "怒目", sad: "垂眼", surprised: "圆睁", focus: "聚焦", bored: "慵懒",
+  drop: "泪滴", tear: "垂泪", heart: "爱心", cross: "十字", moon: "残月",
+};
 
 /* 把单位眼型按自己的倍率放到「左眼」的画布位置；右眼由镜像得到 */
 export function eyePolys(name) {

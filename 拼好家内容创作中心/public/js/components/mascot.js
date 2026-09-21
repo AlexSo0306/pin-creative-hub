@@ -21,8 +21,11 @@ export {
   VERSION,
   GROUPS,
   ALL_STATES,
+  STATE_LABELS,
   SHAPE_NAMES,
+  SHAPE_LABELS,
   EYE_NAMES,
+  EYE_LABELS,
   INK_NAMES,
   INK,
 } from "./mascot/index.js";
