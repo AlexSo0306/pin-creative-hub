@@ -217,6 +217,9 @@
       fill: 'url(#' + id + 'sh)', opacity: '0.16',
       'pointer-events': 'none'
     });
+    /* ── 本地补丁 ③/④：扁平模式下不要地面软投影。
+     * 原项目的角色是「悬空的一枚纯色圆」，脚下没有影子；留着会多一层灰晕。 */
+    if (palette.flat) shadow.setAttribute('opacity', '0');
     svg.appendChild(shadow);
 
     var fxBack = el('g', { 'pointer-events': 'none' });
@@ -267,6 +270,10 @@
     aoGrad.appendChild(el('stop', { offset: '100%', 'stop-color': '#000000', 'stop-opacity': '0.14' }));
     defs.appendChild(aoGrad);
     var ao = el('path', { d: ringPath(headRing), fill: 'url(#' + id + 'ao)', 'pointer-events': 'none' });
+    /* ── 本地补丁 ②/④：扁平模式下关掉底部环境光遮蔽。
+     * 它是一条「下缘压暗」的黑渐变（0 → 0.14），会把纯色圆的下半边染脏。
+     * 用 opacity 而不是 display，因为 applySketchChrome() 会 display='' 把它放回来。 */
+    if (palette.flat) ao.setAttribute('opacity', '0');
     bodyG.appendChild(ao);
 
     /* 腮红在眼睛之下、身体之上 */
@@ -410,6 +417,17 @@
     function setBodyColor(color) {
       if (color === curBodyColor) return;
       curBodyColor = color;
+      /* ── 本地补丁 ①/④：扁平模式（palette.flat）────────────────────────
+       * 上游恒用 shade() 造「伪 3D 体积」径向渐变，配色板关不掉。
+       * 锅宝要的是原项目那种**纯色扁平圆**，所以这里加一个开关：
+       * flat 时四处 stop 同色 → 渐变退化成纯色填充。
+       * 刻意**保留** <radialGradient> 节点、不改 head 的 fill 引用，
+       * 这样 applySketchChrome() 里「fill: none ↔ url(#…g)」的切换仍然有效。
+       * 默认 flat 未设 = 上游原行为，不影响其它角色。 */
+      if (palette.flat) {
+        for (var si = 0; si < stops.length; si++) stops[si].setAttribute('stop-color', color);
+        return;
+      }
       stops[0].setAttribute('stop-color', shade(color, 0.42));
       stops[1].setAttribute('stop-color', shade(color, 0.14));
       stops[2].setAttribute('stop-color', color);
@@ -658,6 +676,16 @@
       /* 地面投影：跟随水平位移，升离地面（弹跳）时收缩变淡 */
       var lift = clamp(-b.y / 52, 0, 1);
       var shOp = sketch > 0.5 ? 0 : 0.16 * (1 - 0.55 * lift);
+      /* ── 本地补丁 ③b/④：扁平模式下地面投影恒为 0（补上 ③ 漏掉的一半）。
+       * ⚠ 2026-09-21 修：③ 只在**创建时**（本文件第 222 行）把 opacity 设成 0，
+       *   而**这一行每帧都会把它覆盖回 0.16** —— 补丁等于没生效。
+       *   实测证据：运行时阴影节点的 opacity 属性是 "0.160"（三位小数，
+       *   正是这行 toFixed(3) 的产物），而不是创建时写的 '0'。
+       *   深色主题下看不出来（黑上黑），浅色主题下就是角色脚下一团灰晕，
+       *   与 Alex 要的「扁平、不要高光」相冲。
+       *   → 教训：要改一个**每帧都会被写**的属性，必须改「写的那一处」；
+       *     只改初始化，下一帧就被覆盖，而且肉眼很难发现。 */
+      if (palette.flat) shOp = 0;
       shadow.setAttribute('opacity', shOp.toFixed(3));
       if (shOp > 0.001) {
         shadow.setAttribute('transform',

@@ -238,11 +238,24 @@
    * 角色可在 eyeShapes / mouthShapes 里用原始 lens 参数定义专属轮廓，
    * 表情覆盖的 pool / mouth 即可引用这些自定义名字 */
 
-  /** 自定义眼形对：o 为原始 lens 参数（w/h/bend/slope/taper/shift/tilt），
+  /** 自定义眼形对：o 为原始 lens 参数（w/h/bend/slope/taper/shift/tilt，可带 dx），
    *  位置沿用角色 style 的 dx / cy */
   function buildCustomEyePair(o, style) {
     var merged = Object.assign({ w: style.w, h: style.h, taper: style.taper, tilt: style.tilt, bend: style.bend }, o);
-    return [lens(C - style.dx, style.cy, merged, 1), lens(C + style.dx, style.cy, merged, -1)];
+    /* ── 本地补丁 ④/④（geometry.js 唯一一处）：形状可自带眼心间距 dx。
+     * 上游把 dx 定死在角色级 style 上，于是「眼形越宽，双眼越挤」——
+     * 眼宽超过 2·dx 就直接叠在一起。原项目不是这么做的：它的 25 个眼形
+     * 各自带 dx（19.6~35.8），靠这个把「双眼内缘间隙」稳在 5~36px：
+     *   横条 idx 4/13/22：w 50~56，dx 31~32 → 间隙 5.2~13.0
+     *   近圆 idx 3/21  ：w 44~46，dx 35~36 → 间隙 25.4~25.7
+     *   竖条 idx 0/8   ：w 21~28，dx 24~27 → 间隙 27.7~36.0
+     * 所以这里让 o.dx 覆盖 style.dx，形状就能自带间距，与上游行为完全兼容
+     * （不传 dx 时取值不变，等价于原实现）。
+     * 安全性已核：dx 只经 setEye 的 ox → theta → ex = cx0 + hw·sin(theta)
+     * 影响眼心横坐标与 cos(theta) 水平缩放；dx 24→36 时水平缩放 0.978→0.953，
+     * 差 2.5%，肉眼不可见。 */
+    var d = (o && o.dx != null) ? o.dx : style.dx;
+    return [lens(C - d, style.cy, merged, 1), lens(C + d, style.cy, merged, -1)];
   }
 
   /** 自定义嘴形：o 为原始 mouthLens 参数（w/h/bend/taper） */

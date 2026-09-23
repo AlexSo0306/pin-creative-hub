@@ -5,17 +5,24 @@
  *
  * 引擎：第三方 mood-mates（public/js/vendor/mood-mates/）。
  *   与旧自研引擎的关键差别 —— 旧引擎的眼睛是**挖空填背景色**，靠 --gb-bg 告诉它背景是什么；
- *   新引擎是**分层眼球**（眼白 / 虹膜 / 瞳孔 / 定光源高光），颜色由角色色板自带，
+ *   新引擎**默认**是分层眼球（眼白 / 虹膜 / 瞳孔 / 定光源高光），颜色由角色色板自带，
  *   不读宿主背景色。所以这里不再需要 --gb-bg / --gb-scheme 那套探针变量。
  *
- * 尺寸：侧栏宽 248px、内边距 16px → 内宽 216px，所以容器就是 216×216 的正方形。
+ * ⚠ 锅宝**不走**分层眼球那条分支：`guobao.js` 刻意不写 `pupil`，
+ *   于是引擎按 render.js 的「bean 豆眼」分支渲染 —— 每只眼就是**一条 path 填 palette.eye**，
+ *   也就是原版的做法（两条白色 <path>）。高光由 `palette.gloss: 0` 关掉，
+ *   体积渐变由 `palette.flat: true` 压平（本地补丁 ①②③③b，见 vendor README）。
+ *
+ * 尺寸：侧栏宽 248px、内边距 16px、再减 1px 右边框 → 内宽 **215px**，
+ *   所以容器是 215×215 的正方形（2026-09-21 实测；本文档原先写 216，是漏算了右边框）。
+ *   ⚠ 断言里**不写死这个数**，只验「正方形 + 尺寸在 200~230」，见 verify-guobao.mjs。
  */
 
 /* ── 正方形容器 ───────────────────────────────────────────── */
 
 .guobao-slot {
   position: relative;
-  width: 100%;              /* = 侧栏内宽 216px */
+  width: 100%;              /* = 侧栏内宽 215px */
   aspect-ratio: 1 / 1;      /* 正方形 */
   margin-bottom: 14px;
   padding: 10px;
@@ -24,7 +31,10 @@
   background: var(--surface, #090909);
   border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
-  /* 品牌规范规则 3：细边框 + 轻微高光，不用厚重阴影 */
+  /* 容器外框：1px 内嵌亮线，读作「被框住」。
+     ⚠ 这是**容器**的边框质感，与角色的高光无关 ——
+       角色身上的高光 / 体积渐变已经全部关掉（palette.gloss: 0 + palette.flat: true）。
+       别把这两件事混成一件：Alex 说的「不需要高光」指的是角色本体。 */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transition: border-color 0.18s ease, background 0.18s ease;
 

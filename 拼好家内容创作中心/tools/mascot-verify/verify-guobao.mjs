@@ -1,6 +1,8 @@
 /* 锅宝侧栏容器 —— 真实应用实测。
-   验：容器几何（216×216、在「界面主题」上方）、角色渲染、五官存在、
-       路由→表情映射、气泡、明暗主题、移动端隐藏。 */
+   验：容器几何（正方形、在「界面主题」上方）、角色渲染、外观契约（像素级：
+       正圆 / 纯色扁平 / 白竖条眼）、路由→表情映射、气泡、明暗主题、移动端隐藏。
+   ⚠ 容器尺寸**不写死**：侧栏 248 宽、padding 16×2、再减 1px 右边框 = 215。
+     断言的是「正方形 + 尺寸合理」，不是某个具体数。 */
 import path from "node:path";
 import { launch, sweep, leftover } from "/Users/alexso/.workbuddy-ai/skills/headless-chrome-verify/assets/cdp.mjs";
 
@@ -206,6 +208,180 @@ try {
   /* ⚠ 这里把 fxN > 0 也写进条件 —— 集合为空时绝不允许判绿 */
   ck("特效粒子有配色，没落到黑色兜底", fxN > 0 && fxBlack === 0,
     `黑色 ${fxBlack} / 峰值 ${fxN} 个`);
+
+  /* 9. 外观契约（像素级）—— 逐条对应四条硬要求：
+   *    ① 身体只要 #0099ff 圆形   ② 不需要高光   ③ 是扁平的   ④ 眼睛是白色竖线
+   *
+   * ⚠ 这四条**都不能靠查 DOM 属性**来验：
+   *   - 引擎刻意**保留** <radialGradient id="mm0g">，只把 4 个 stop 设成同色 ——
+   *     于是 fill 查出来是 url(#mm0g)，看着像有渐变，其实渲染出来是纯色；
+   *   - 高光 / AO / 地面阴影是同一套路：节点都在，透明度被压到 0。
+   *   - 反过来说，**节点在 ≠ 有效果**，**fill 是 url ≠ 有渐变**，属性层面全是噪音。
+   *   唯一可信的验法是**直接数像素**：把角色 SVG 画进 canvas 再读回来。
+   *   canvas 用透明底 → 抗锯齿像素的 RGB 仍是本体色（只有 alpha 变低），
+   *   所以「身体是不是只有一种颜色」可以精确判定，不受边缘混色干扰。
+   *
+   * ⚠ 克隆时必须先摘掉引擎特效层（mm-bubble / speck / sheen / spark）：
+   *   它们有自己的配色，会把「身体纯色」这条测歪 —— 那不是身体的颜色。 */
+  const PIXEL_PROBE = `(async () => {
+    const svg = document.querySelector('.guobao-stage svg');
+    const clone = svg.cloneNode(true);
+    /* ⚠ 摘掉两类会污染统计的图层：
+     *   .mm-* 特效（bubble / speck / sheen / spark）—— 它们自带配色，
+     *     混进来会把「身体只有一种颜色」测歪（那不是身体的颜色）；
+     *   <text> —— 睡眠态的 zzz 字母，fill 就是 palette.zzz = #FFFFFF，
+     *     不摘掉它会并进「眼睛」的白色块里：实测 00 睡眠的左眼被量成 112×17
+     *     （真值是 50×14，112 是把右眼和 zzz 一起框进去的结果）。
+     *     这类误测不会报错，只会给出一个「看着合理」的错数字。 */
+    clone.querySelectorAll('.mm-bubble, .mm-speck, .mm-sheen, .mm-spark, text').forEach((n) => n.remove());
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    if (!clone.getAttribute('viewBox')) clone.setAttribute('viewBox', '0 0 240 240');
+    const N = 240;
+    clone.setAttribute('width', N); clone.setAttribute('height', N);
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('SVG 转图片失败')); img.src = url; });
+    const cv = document.createElement('canvas'); cv.width = N; cv.height = N;
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, N, N);
+    ctx.drawImage(img, 0, 0, N, N);
+    const d = ctx.getImageData(0, 0, N, N).data;
+
+    const at = (x, y) => { const o = (y * N + x) * 4; return [d[o], d[o + 1], d[o + 2], d[o + 3]]; };
+    const isWhite = (R, G, B) => R > 235 && G > 235 && B > 235;
+    /* 「身体核心像素」= 自身不透明且非白，且**半径 2 以内**的像素也都如此。
+     * ⚠ 为什么是 2 而不是 1：
+     *   canvas 的 getImageData 是**反预乘**的，任何 alpha < 255 的像素都带取整误差
+     *   （实测出现 0,155,255）；眼与身体交界处更是**两种实色相混**
+     *   （实测 128,204,255 = 白蓝各半、64,179,255 = 25% 白）。
+     *   这两类混色都不是「身体有两种颜色」，但都会污染直方图。
+     *   1px 邻域只剔得掉紧贴纯白的那一层：睡眠态的横条有 14px 厚、taper 0.05
+     *   （近乎圆角矩形），上/下缘是一条很长的近似水平边，过渡带**宽到 2px**，
+     *   第二层混色像素的四邻域全是实色，照样混进直方图 —— 实测就漏了个 64,179,255。
+     *   腐蚀到 2px 之后，圆的外缘与眼的白边两种混色同时被挡在外面。 */
+    const isCore = (x, y) => {
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= N || ny >= N) return false;
+          const [R, G, B, a] = at(nx, ny);
+          if (a !== 255 || isWhite(R, G, B)) return false;
+        }
+      }
+      return true;
+    };
+
+    const bodyCol = {}, whiteCol = {}, edgeCol = {};
+    const solid = [];        // alpha > 127 的身体像素，用来判「是不是圆」
+    const whitePts = [], whiteX = {};
+    for (let y = 0; y < N; y++) {
+      for (let x = 0; x < N; x++) {
+        const [R, G, B, a] = at(x, y);
+        if (a < 8) continue;
+        if (isWhite(R, G, B)) {
+          whiteCol[R + ',' + G + ',' + B] = (whiteCol[R + ',' + G + ',' + B] || 0) + 1;
+          whitePts.push([x, y]); whiteX[x] = 1;
+        } else {
+          if (a > 127) solid.push([x, y]);
+          const k = R + ',' + G + ',' + B;
+          if (isCore(x, y)) bodyCol[k] = (bodyCol[k] || 0) + 1;
+          else edgeCol[k] = (edgeCol[k] || 0) + 1;
+        }
+      }
+    }
+    const rank = (m) => Object.keys(m).sort((p, q) => m[q] - m[p]);
+    const bb = (pts) => {
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      for (const [x, y] of pts) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      return [x1 - x0 + 1, y1 - y0 + 1];
+    };
+    /* 按 x 方向的最大空档把白色像素切成左右两团 —— 两眼之间必然有空档 */
+    const xs = Object.keys(whiteX).map(Number).sort((p, q) => p - q);
+    let gap = 0, cut = 0;
+    for (let i = 1; i < xs.length; i++) if (xs[i] - xs[i - 1] > gap) { gap = xs[i] - xs[i - 1]; cut = (xs[i] + xs[i - 1]) / 2; }
+    const LP = whitePts.filter((p) => p[0] < cut), RP = whitePts.filter((p) => p[0] >= cut);
+    const sb = solid.length ? bb(solid) : null;
+    let coreN = 0;
+    for (const k in bodyCol) coreN += bodyCol[k];
+    return {
+      bodyN: Object.keys(bodyCol).length, bodyTop: rank(bodyCol).slice(0, 3), bodyCore: coreN,
+      edgeTop: rank(edgeCol).slice(0, 2),
+      whiteN: Object.keys(whiteCol).length, whiteTop: rank(whiteCol).slice(0, 3),
+      whitePix: whitePts.length,
+      bodyBox: sb,
+      solidRatio: sb ? solid.length / (sb[0] * sb[1]) : 0,
+      leftBox: LP.length ? bb(LP) : null,
+      rightBox: RP.length ? bb(RP) : null,
+      eyeGap: gap,
+    };
+  })()`;
+
+  await t.evalJs(`window.__realGH2 = Date.prototype.getHours;
+    Date.prototype.getHours = function () { return 12; };`);
+  await t.evalJs(`window.mascotDock.setEmotion('02')`);   // 基准态：calm 竖条
+  await t.sleep(1000);
+  const look = await t.evalJs(PIXEL_PROBE);
+
+  /* ⚠ 前置闸：探针里的页面代码一旦抛错，evalJs 返回的是**空对象 {}**（不是 undefined，
+   *   也不会在这里抛异常）—— 后面每条断言就都变成「undefined 上取属性」的 TypeError，
+   *   报错位置和真正的原因（页面里少声明一个变量）毫无关系。
+   *   实测踩过：whiteCol 忘了声明 → 报错指向 solidRatio.toFixed，查了半天。
+   *   所以先验「探针结构完整」，不完整就直接说清楚。 */
+  const probeOk = look && typeof look.bodyN === 'number' && typeof look.solidRatio === 'number'
+    && typeof look.whiteN === 'number' && Array.isArray(look.bodyTop);
+  if (!probeOk) {
+    fail.push(`像素探针没跑通（返回 ${JSON.stringify(look)}）—— 后面的外观断言全部作废`);
+    console.log("=== 通过 " + ok.length + " / 失败 " + fail.length + " ===");
+    fail.forEach((s) => console.log("  ✗ " + s));
+    console.log("页面报错：" + t.errors.slice(0, 3).join(" | "));
+    process.exitCode = 1;
+    await t.close();
+    process.exit(1);
+  }
+
+  /* ⚠ 每条都带「非空前置」：身体/白像素一个都没测到时绝不判绿 */
+  ck("① 身体是正圆（bbox 宽高相等）",
+    look.bodyBox && Math.abs(look.bodyBox[0] - look.bodyBox[1]) <= 2,
+    `bbox ${look.bodyBox ? look.bodyBox.join('×') : '（没测到身体像素）'}`);
+  ck("① 身体实心占比 ≈ π/4（是圆，不是方/锅）",
+    look.bodyBox && look.solidRatio > 0.74 && look.solidRatio < 0.83,
+    `实测 ${look.solidRatio.toFixed(3)}（正圆 0.785 · 方形 1.000 · 圆角矩形 ~0.9）`);
+  ck("②③ 身体只有一种颜色（无渐变 / 无高光 / 无 AO / 无地面阴影）",
+    look.bodyCore > 0 && look.bodyN === 1,
+    `核心像素 ${look.bodyCore} 个 · ${look.bodyN} 种：${look.bodyTop.join(' / ') || '（无）'}` +
+    (look.bodyN > 1 ? ` · 边缘混色 ${look.edgeTop.join(' / ')}` : ''));
+  ck("① 身体色正是 #0099FF",
+    look.bodyTop[0] === '0,153,255', `实测 rgb(${look.bodyTop[0] || '-'})`);
+  ck("④ 眼睛是纯白（没有虹膜 / 瞳孔 / 高光分层）",
+    look.whiteN === 1 && look.whiteTop[0] === '255,255,255',
+    `${look.whiteN} 种：${look.whiteTop.join(' / ') || '（无）'}`);
+  ck("④ 是两只独立的眼（两个白色块）",
+    !!look.leftBox && !!look.rightBox,
+    `左 ${look.leftBox ? look.leftBox.join('×') : '（无）'} · 右 ${look.rightBox ? look.rightBox.join('×') : '（无）'} · 间距 ${look.eyeGap}px`);
+  ck("④ 基准态眼睛是竖条（高 > 宽）",
+    look.leftBox && look.leftBox[1] > look.leftBox[0] * 1.6,
+    `左眼 ${look.leftBox ? look.leftBox.join('×') : '-'}（高/宽 ${look.leftBox ? (look.leftBox[1] / look.leftBox[0]).toFixed(2) : '-'}）`);
+
+  /* 9b. 横条只留给闭眼态 —— 且不许细到看不见
+   * ⚠ 这条是 2026-09-21 那次事故（把 scan 改成粗横条，19/39/40 全变闭眼）的回归网。
+   *   逐情绪的全表审计在 tools/mascot-verify/check-eye-shapes.mjs，这里只抽查两格：
+   *   00 睡眠 必须是横条、02 基准 必须是竖条 —— 两边都在，说明「形状在按情绪变」。 */
+  await t.evalJs(`window.mascotDock.setEmotion('00')`);
+  await t.sleep(1000);
+  const sleep = await t.evalJs(PIXEL_PROBE);
+  ck("00 睡眠是横条（闭眼态）",
+    sleep.leftBox && sleep.leftBox[0] > sleep.leftBox[1] * 1.6,
+    `左眼 ${sleep.leftBox ? sleep.leftBox.join('×') : '-'}（宽/高 ${sleep.leftBox ? (sleep.leftBox[0] / sleep.leftBox[1]).toFixed(2) : '-'}）`);
+  ck("00 睡眠的横条不至于细成发丝（≥3px @240）",
+    sleep.leftBox && sleep.leftBox[1] >= 3,
+    `厚度 ${sleep.leftBox ? sleep.leftBox[1] : '-'}px`);
+  ck("睡眠态仍是纯色身体（换表情不改外观契约）",
+    sleep.bodyCore > 0 && sleep.bodyN === 1 && sleep.bodyTop[0] === '0,153,255',
+    `核心像素 ${sleep.bodyCore} 个 · ${sleep.bodyN} 种：${sleep.bodyTop.join(' / ')}` +
+    (sleep.bodyN > 1 ? ` · 边缘混色 ${sleep.edgeTop.join(' / ')}` : ''));
+  await t.evalJs(`window.mascotDock.setEmotion('02')`);
+  await t.sleep(600);
+  await t.evalJs(`Date.prototype.getHours = window.__realGH2`);
 
   /* 8. 报错 */
   ck("无页面报错", t.errors.length === 0, t.errors.slice(0, 3).join(' | '));

@@ -46,6 +46,20 @@
   <script src="../../public/js/vendor/mood-mates/core/fx.js"></script>
   <script src="../../public/js/vendor/mood-mates/data/emotions.js"></script>
   <script src="../../public/js/vendor/mood-mates/core/engine.js"></script>
+  <!-- 捕获**原始**角色定义。
+       ⚠ characters.get(id) 返回的是 resolveVariant → resolveCharacter 之后的**规范化副本**，
+          eyeShapes / emotions 这类原始字段都被丢掉了（engine.js:143-155）。
+          页脚要报「用了几个自定义眼形」就必须在注册那一刻把 raw 留下来。 -->
+  <script>
+  window.__RAW_CHARS = {};
+  (function () {
+    var reg = window.MoodMates.characters.register;
+    window.MoodMates.characters.register = function (def) {
+      if (def && def.id) window.__RAW_CHARS[def.id] = def;
+      return reg(def);
+    };
+  })();
+  </script>
   <!-- 角色 -->
   <script src="../../public/js/components/guobao.js"></script>
 
@@ -92,10 +106,20 @@
     });
 
     document.getElementById('cnt').textContent = '共 ' + list.length + ' 个';
+    /* ⚠ 页脚原来只报 geo.eyeSlots.length（= 20，上游槽位数），
+       但锅宝实际在用的是 **22 个具名眼形**：20 个上游槽位里有 9 个被同名覆盖，
+       另加 2 个新增（delight / intent）。只报 20 会让人以为「没有自定义眼形」。 */
+    var ch = window.__RAW_CHARS['guobao'];
+    var custom = (ch && ch.eyeShapes) ? Object.keys(ch.eyeShapes) : [];
+    var overridden = custom.filter(function (k) { return window.MoodMates.geo.eyeSlots.indexOf(k) >= 0; });
+    var added = custom.filter(function (k) { return window.MoodMates.geo.eyeSlots.indexOf(k) < 0; });
     document.getElementById('meta').textContent =
       '角色数 ' + window.MoodMates.characters.list().length +
       ' · 体态生成器 ' + window.MoodMates.geo.bodyTypes.join('/') +
-      ' · 眼形槽位 ' + window.MoodMates.geo.eyeSlots.length +
+      ' · 眼形：上游 ' + window.MoodMates.geo.eyeSlots.length + ' 个槽位' +
+      '（锅宝覆盖其中 ' + overridden.length + ' 个）' +
+      ' + 新增 ' + added.length + ' 个（' + added.join(' / ') + '）' +
+      ' → 可用具名眼形 ' + (window.MoodMates.geo.eyeSlots.length + added.length) + ' 个' +
       ' · 嘴形槽位 ' + window.MoodMates.geo.mouthSlots.length;
   }
 
