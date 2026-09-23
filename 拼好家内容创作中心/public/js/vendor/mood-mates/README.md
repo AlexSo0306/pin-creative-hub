@@ -60,7 +60,49 @@ legal/CHARACTER-DESIGN.md ← docs/CHARACTER-DESIGN.md
 **没有引入**：`src/characters/nimbo.js`、`src/characters/twinkle.js`（上游角色，我们不用）、
 `site/`（展示站外壳）、`tools/`。
 
+> ⚠️ **`site/` 不是「纯外壳」，里面有一样东西是必需的** —— 见下一节。
+> 当初按「只搬引擎」的原则跳过 `site/`，结果漏掉了 `site/style.css` 里的特效配色，
+> 导致粒子渲染成黑色。已补在 `public/css/mascot.css`。
+
 锅宝的角色定义是我们自己写的，见 `public/js/components/guobao.js`。
+
+## ⚠️ 宿主必须补的样式（`mm-*` 类名契约）
+
+**引擎不带样式表。** 特效层 `core/fx.js` 建图元时**只挂类名、不给 `fill`**：
+
+```js
+el('path',    { d: cloudD, class: 'mm-bubble' })   // ← 没有 fill
+el('circle',  { r: 1,      class: 'mm-speck'  })   // ← 没有 fill
+el('ellipse', { cx: -5.2,  class: 'mm-sheen'  })   // ← 没有 fill
+```
+
+它们的颜色规则写在上游**演示站**的 `site/style.css`（第 754–760 行），不在 `core/` 里。
+宿主不补这段 CSS，这些图元就落到 SVG 默认值 `fill: #000` ——
+表现为角色旁边飘出一个**黑泡泡**（深色主题像脏点，浅色主题更刺眼）。
+
+引擎实际发出的类名一共 6 个：
+
+| 类名 | 谁建的 | 需要宿主补色？ |
+|---|---|---|
+| `mm-bubble` | `fx.js` 冒热气泡泡 | ✅ 必需 |
+| `mm-sheen` | 泡泡上的高光 | ✅ 必需 |
+| `mm-speck` | 泡泡炸开的小点 | ✅ 必需 |
+| `mm-spark` | 星芒（orbit 节点） | ❌ 已内联 `fill`（取 `palette.fx \|\| 皮肤色板`） |
+| `mm-body` | 身体路径 | ❌ 已由角色色板给色 |
+| `mm-svg` | 根 `<svg>` | ❌ 只是个标记 |
+
+**我们的实现**：`public/css/mascot.css` 的「引擎样式契约」段落，
+颜色按锅宝的蓝重配过（上游的 `#C6D6F5` 是配紫白系角色的），并按明暗主题分两档。
+
+**回归守卫**：`tools/mascot-verify/verify-guobao.mjs` 有两条断言盯着这件事
+（「特效粒子确实出现」+「没落到黑色兜底」），并支持注入对照复现现场：
+
+```bash
+INJECT_FX_BLACK=1 node tools/mascot-verify/verify-guobao.mjs   # 期望：第 2 条变红
+```
+
+另注：`site/style.css` 里还有两条与出框有关的规则，我们也按同样思路处理了 ——
+`.stage svg { overflow: visible }`（别把出框的泡泡裁掉）。
 
 ## 加载顺序（固定，不可调换）
 

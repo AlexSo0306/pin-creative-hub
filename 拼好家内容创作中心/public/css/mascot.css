@@ -27,6 +27,14 @@
   /* 品牌规范规则 3：细边框 + 轻微高光，不用厚重阴影 */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transition: border-color 0.18s ease, background 0.18s ease;
+
+  /* 把引擎甩出来的特效粒子（冒热气 / 星芒）框在这个方块里。
+     ⚠ 与下面 .guobao-stage svg 的 overflow: visible 是**一对**，不能只留一个：
+       svg 那层放开 → 泡泡不会被 193px 的舞台边界硬切；
+       slot 这层收住 → 泡泡不会飘到侧栏导航文字上。
+     这里收住不会裁掉状态气泡 —— 气泡是 position: fixed，
+     祖先的 overflow 管不到它（.guobao-slot 上没有 transform / filter）。 */
+  overflow: hidden;
 }
 
 .guobao-slot:hover {
@@ -55,6 +63,68 @@
   width: 100%;
   height: 100%;
   overflow: visible;       /* 引擎的特效粒子会甩出身体轮廓，别裁 */
+}
+
+/* ── 引擎样式契约（mm-* 类名）───────────────────────────────
+ *
+ * ⚠ 这一块**必须由宿主提供**，引擎自己不带样式表。
+ *
+ * mood-mates 的特效层（core/fx.js）建元素时**不给 fill 属性**，只挂类名：
+ *     el('circle', { r: 1, class: 'mm-speck' })          ← 无 fill
+ *     el('path',   { d: cloudD, class: 'mm-bubble' })    ← 无 fill
+ *     el('ellipse',{ cx: -5.2, ..., class: 'mm-sheen' }) ← 无 fill
+ * 颜色规则在上游**演示站**的 site/style.css 里（第 754–760 行），不在 core/ 里。
+ * 只搬 core/ + data/ 而不补这段 CSS，这些图元就落到 SVG 默认值 fill:#000 ——
+ * 表现为角色旁边飘出一个**黑泡泡**（深色主题下尤其像脏点）。
+ * 2026-09-24 实测：emotion 33 任务完成 的右上角就有一个 18×17 的黑泡泡。
+ *
+ * 星芒（mm-spark）不受影响：fx.js 建它时就内联了 fill（取 palette.fx || 皮肤色板）。
+ * 所以只需要补 bubble / sheen / speck 三个，加上线稿模式的 4 条。
+ *
+ * 取值按锅宝的蓝色重新配过，没照抄上游的 #C6D6F5（那是给紫白系角色的）。
+ */
+.guobao-slot {
+  --mm-bubble-fill: #D6E8FF;
+  --mm-bubble-stroke: #EAF4FF;
+  --mm-bubble-sheen: rgba(255, 255, 255, 0.52);
+  --mm-bubble-sw: 1.1;
+  --mm-speck: #CFE2FF;
+  --sketch-ink: #DCEBFF;
+}
+
+/* 浅色主题下侧栏底是浅的，浅蓝泡泡会糊掉，所以压深一档 */
+:root[data-theme="fluent"] .guobao-slot {
+  --mm-bubble-fill: #BBD8F5;
+  --mm-bubble-stroke: #8FBEF0;
+  --mm-bubble-sheen: rgba(255, 255, 255, 0.88);
+  --mm-speck: #A9CCEE;
+  --sketch-ink: #2A4A6B;
+}
+
+.guobao-stage svg .mm-bubble {
+  fill: var(--mm-bubble-fill);
+  stroke: var(--mm-bubble-stroke);
+  stroke-width: var(--mm-bubble-sw);
+}
+.guobao-stage svg .mm-sheen { fill: var(--mm-bubble-sheen); }
+.guobao-stage svg .mm-speck { fill: var(--mm-speck); }
+
+/* 线稿模式：只有内部表情对照表（tools/mascot-verify/emotion-sheet.html）会开 */
+.guobao-stage svg.is-sketch .mm-bubble {
+  fill: none;
+  stroke: var(--sketch-ink);
+  stroke-width: 2.4;
+}
+.guobao-stage svg.is-sketch .mm-sheen { display: none; }
+.guobao-stage svg.is-sketch .mm-speck {
+  fill: none;
+  stroke: var(--sketch-ink);
+  stroke-width: 1.1;
+}
+.guobao-stage svg.is-sketch .mm-spark {
+  fill: none;
+  stroke: var(--sketch-ink);
+  stroke-width: 1.25;
 }
 
 /* 悬停时角色轻微上浮，给出「可以点」的暗示 */

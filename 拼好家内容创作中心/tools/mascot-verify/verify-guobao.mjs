@@ -152,6 +152,61 @@ try {
   await t.send("Emulation.clearDeviceMetricsOverride");
   await t.sleep(500);
 
+  /* 7.5 引擎特效粒子的配色 —— mm-* 是**宿主的样式契约**
+   *
+   * ⚠ 引擎 core/fx.js 建 bubble / speck / sheen 时**不给 fill 属性**，只挂类名：
+   *      el('path', { d: cloudD, class: 'mm-bubble' })   ← 无 fill
+   *   颜色规则在上游**演示站**的 site/style.css（第 754–760 行），不在 core/ 里。
+   *   只搬 core/ + data/ 而漏了这段 CSS，图元就落到 SVG 默认 fill:#000 ——
+   *   角色旁边飘出一个黑泡泡（深色主题下像脏点，浅色主题下更刺眼）。
+   *   2026-09-24 实测过：33 任务完成 的右上角就是一个 18×17 的黑泡泡。
+   *
+   * ⚠ 必须先切到**会放特效**的表情、并且**轮询采样**再查。
+   *   粒子是**瞬态**的：cloudpuff 的泡泡走完 travel+hang+pop 就被移除，
+   *   点采一次很容易撞在「已经放完了」的空档上，那时 .mm-bubble 集合为空，
+   *   「没有黑色」这条就会因为「一个都没查到」而**空转通过**。
+   *   这个坑 2026-09-24 真踩到了：第一版写的是 setEmotion('33') 后 sleep 1500 点采，
+   *   注入对照那次正好采到 0 个 —— 于是「没落到黑色兜底」绿着通过，其实什么都没测。
+   *   所以拆成两条 + 轮询：先证明泡泡确实出现过，再证明它们不是黑的。
+   */
+  /* 注入对照：把这三个变量强制成黑色，复现「漏了宿主 CSS」的现场。
+     没跑过这一遍，「没落到黑色兜底」这条就只是**没失败过**，不算被证明。
+     用法：INJECT_FX_BLACK=1 node tools/mascot-verify/verify-guobao.mjs
+     期望：第 1 条仍绿（说明泡泡确实在），第 2 条变红。 */
+  if (process.env.INJECT_FX_BLACK) {
+    await t.evalJs(`(() => { const s = document.querySelector('.guobao-slot');
+      s.style.setProperty('--mm-bubble-fill', '#000');
+      s.style.setProperty('--mm-bubble-sheen', '#000');
+      s.style.setProperty('--mm-speck', '#000'); })()`);
+    await t.sleep(300);
+    console.log("⚠ INJECT_FX_BLACK=1 —— 已把粒子颜色强制成黑色，本组第 2 条应出现失败");
+  }
+
+  await t.evalJs(`window.mascotDock.setEmotion('33')`);
+  await t.sleep(600);
+  await t.evalJs(`window.mascotDock.celebrate()`);   // 签名动作，直接喷泡泡
+  let fxN = 0, fxBlack = 0, fxSample = [];
+  for (let i = 0; i < 26; i++) {                     // ≈3.1s，覆盖泡泡整个生命周期
+    const s = await t.evalJs(`(() => {
+      const svg = document.querySelector('.guobao-stage svg');
+      const els = [...svg.querySelectorAll('.mm-bubble, .mm-speck, .mm-sheen, .mm-spark')];
+      const isBlack = (f) => f === 'rgb(0, 0, 0)' || f === 'black' || f === '#000'
+                          || /^rgba?\\(0,\\s*0,\\s*0(,\\s*1)?\\)$/.test(f);
+      return { n: els.length,
+               black: els.filter((e) => isBlack(getComputedStyle(e).fill)).length,
+               sample: els.slice(0, 2).map((e) =>
+                 (e.getAttribute('class') || '?') + '=' + getComputedStyle(e).fill) };
+    })()`);
+    if (s.n > fxN) { fxN = s.n; fxSample = s.sample; }
+    fxBlack = Math.max(fxBlack, s.black);
+    await t.sleep(120);
+  }
+  ck("特效粒子确实出现（否则下一条会空转）", fxN > 0,
+    `峰值 ${fxN} 个 · ${fxSample.join(' / ') || '（一个都没采到）'}`);
+  /* ⚠ 这里把 fxN > 0 也写进条件 —— 集合为空时绝不允许判绿 */
+  ck("特效粒子有配色，没落到黑色兜底", fxN > 0 && fxBlack === 0,
+    `黑色 ${fxBlack} / 峰值 ${fxN} 个`);
+
   /* 8. 报错 */
   ck("无页面报错", t.errors.length === 0, t.errors.slice(0, 3).join(' | '));
 
