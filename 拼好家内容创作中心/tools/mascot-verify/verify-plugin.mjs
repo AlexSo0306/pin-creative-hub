@@ -1,8 +1,9 @@
 /* 锅宝挂件 · 工作台集成验证（要起真实应用，不是静态服务）
    跑法：
-     DB_PATH=/tmp/wv.db PORT=4174 node server.js   # ⚠ 必须指一次性副本！
+     DB_PATH=/tmp/wv.db PORT=4174 node server.js   # 套件跑在一次性副本上
      node tools/mascot-verify/verify-plugin.mjs http://127.0.0.1:4174/
-   ⚠ 绝不要对真实库直接跑 server.js —— createDatabase() 会执行 schema.sql 并 seed（src/db.js:21）。
+   ⚠ 指副本不是为了防种子 —— seedDatabase() 实测幂等（schema 16 张表全 IF NOT EXISTS，
+     seed 的 4 个 seeder 都先 COUNT 再早退）。是为了让套件将来新增写路径时不静默改真实库。
    重点：v1 栽在「挂件完全点不动」——所以这里必须用真实指针/触摸事件，不能用 el.click()。 */
 import fs from "node:fs";
 import path from "node:path";

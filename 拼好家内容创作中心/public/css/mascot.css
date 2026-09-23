@@ -1,168 +1,116 @@
-/* 拼好家运营创作工作台 · 角色挂件样式
+/* 拼好家运营创作工作台 · 锅宝（侧栏正方形容器）
  *
- * 颜色全部走工作台既有 CSS token（app.css 的 :root 深色 / :root[data-theme="fluent"] 浅色），
- * 因此两套主题自动跟随，不需要额外主题分支。
+ * 位置：左侧导航栏内，「界面主题」**上方**，由 .sidebar 的 flex 列自然落位
+ *       （.sidebar-spacer 是 flex:1 的撑开块，把这一块和主题控件一起压到底部）。
  *
- * v2 引擎把「主题」这一层收进了三个变量，挂件只需提供它们：
- *   --gb-scheme  主题探针（light / dark），引擎读它决定用墨色的哪一组端点
- *   --gb-bg      角色所处背景色 —— **眼睛是挖空的**，填充的就是它
- *   --gb-eye     单独指定眼睛颜色（不设则跟随 --gb-bg）
+ * 引擎：第三方 mood-mates（public/js/vendor/mood-mates/）。
+ *   与旧自研引擎的关键差别 —— 旧引擎的眼睛是**挖空填背景色**，靠 --gb-bg 告诉它背景是什么；
+ *   新引擎是**分层眼球**（眼白 / 虹膜 / 瞳孔 / 定光源高光），颜色由角色色板自带，
+ *   不读宿主背景色。所以这里不再需要 --gb-bg / --gb-scheme 那套探针变量。
+ *
+ * 尺寸：侧栏宽 248px、内边距 16px → 内宽 216px，所以容器就是 216×216 的正方形。
  */
 
-/* ── 挂件容器 ─────────────────────────────────────────────── */
+/* ── 正方形容器 ───────────────────────────────────────────── */
 
-.pm-dock {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  z-index: 40;
-  display: flex;
-  align-items: flex-end;
-  pointer-events: none;
+.guobao-slot {
+  position: relative;
+  width: 100%;              /* = 侧栏内宽 216px */
+  aspect-ratio: 1 / 1;      /* 正方形 */
+  margin-bottom: 14px;
+  padding: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--surface, #090909);
+  border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  /* 品牌规范规则 3：细边框 + 轻微高光，不用厚重阴影 */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
 
-  /* 宽度锁死 = 挂件宽度。气泡是绝对定位（见下），不参与这里的高度/宽度计算，
-     否则「拖到某处 → 刷新后挂件偏移」：气泡有文字时宽、没文字时窄，会把挂件推着走。
-     实测差过 122px。 */
-  width: calc(112px * var(--pm-scale, 1));
+.guobao-slot:hover {
+  border-color: var(--border, rgba(0, 153, 255, 0.18));
+}
 
-  /* 拖拽必需：不禁掉 touch-action，触屏上手指一动就变成页面滚动，挂件拖不动。
-     代价是「以挂件为起点」的手势不再能滚动页面 —— 76px 的小方块，可以接受。 */
-  touch-action: none;
+.guobao-slot.is-active {
+  border-color: var(--accent, #0099ff);
+}
+
+/* ── 角色舞台 ─────────────────────────────────────────────── */
+
+.guobao-stage {
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+  cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-
-  /* 深色画布：白墨 + 黑色挖空眼 */
-  --gb-scheme: dark;
-  --gb-bg: var(--bg, #000000);
-  --gb-badge: var(--accent, #0099ff);
+  /* 引擎自己会建 <svg class="mm-svg">，宽高交给它按容器撑满 */
 }
 
-:root[data-theme="fluent"] .pm-dock {
-  /* 浅色画布：黑墨 + 浅色挖空眼 */
-  --gb-scheme: light;
-}
-
-/* 注意：必须用后代选择器，不能用 `>`。
-   实际 DOM 是 .pm-dock > .pm-dock-holder > .gb-mascot（引擎自己创建根节点，外面还套了一层挂载容器）。
-   写成 `.pm-dock > .gb-mascot` 会不匹配 → 从 .pm-dock 继承到 pointer-events:none →
-   挂件完全点不动，而程序化 .click() 仍然能通，极易漏检。 */
-.pm-dock .gb-mascot {
-  pointer-events: auto;
-  cursor: pointer;
-  transition: transform 0.18s ease;
-}
-
-.pm-dock .gb-mascot:hover {
-  transform: translateY(-1px);
-}
-
-/* 拖拽中。必须排在 :hover 之后 —— 两者特异性相同（3 个类），靠顺序决定胜负。
-   拖拽时还要抬 z-index，否则挂件被拖到别的层下面会「消失在手里」。 */
-.pm-dock.is-dragging {
-  z-index: 60;
-}
-
-.pm-dock.is-dragging .gb-mascot {
-  cursor: grabbing;
-  transform: none;
-  transition: none;
-}
-
-.pm-dock.is-dragging .pm-dock-bubble {
-  /* 拖拽时气泡跟着飘会干扰判断，直接淡掉 */
-  opacity: 0;
-  transition: none;
-}
-
-.pm-dock-holder {
-  width: calc(112px * var(--pm-scale, 1));
-  height: calc(112px * var(--pm-scale, 1));
-  line-height: 0;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.pm-dock-holder svg {
+.guobao-stage svg {
   display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;       /* 引擎的特效粒子会甩出身体轮廓，别裁 */
 }
 
-/* 覆盖动效图元不参与命中测试 */
-.pm-dock .gb-fx-back,
-.pm-dock .gb-fx-front {
-  pointer-events: none;
+/* 悬停时角色轻微上浮，给出「可以点」的暗示 */
+.guobao-stage svg {
+  transition: transform 0.18s ease;
 }
 
-/* ── 提示条：等宽字体 + 细边框，与工作台数据语气一致 ───────── */
+.guobao-slot:hover .guobao-stage svg {
+  transform: translateY(-2px);
+}
 
-.pm-dock-bubble {
-  /* 绝对定位：落在挂件左侧（right: 100% + 10px 的间隙），
-     不参与 .pm-dock 的 flex 布局 —— 挂件的位置必须只由它自己决定。 */
-  position: absolute;
-  right: calc(100% + 10px);
-  bottom: 16px;
-  /* ⚠ 必须显式 width: max-content。绝对定位下只给 max-width 会按 shrink-to-fit 算，
-     而可用宽度被 .pm-dock 的固定宽度压成负数 → 气泡塌到最小内容宽（实测只剩 36px）。
-     max-content + max-width 才是「按内容自适应，超长才换行」。 */
-  width: max-content;
+/* ── 状态气泡 ─────────────────────────────────────────────── */
+
+/* ⚠ 用 position: fixed 而不是 absolute。
+   .sidebar 上有 overflow: hidden，absolute 的气泡会被裁掉（侧栏只有 248px 宽，
+   气泡要伸到右侧主内容区上方才放得下）。fixed 的包含块是视口，不受该 overflow 裁剪
+   —— 前提是祖先链上没有 transform / filter / will-change（.sidebar 上确实没有）。
+   位置由 JS 按容器的 getBoundingClientRect() 每帧算，见 mascot-dock.js。 */
+.guobao-bubble {
+  position: fixed;
+  z-index: 45;
+  width: max-content;      /* 绝对/固定定位下只给 max-width 会塌成最小内容宽 */
   max-width: 210px;
-  pointer-events: auto;
   padding: 7px 11px;
-  background: var(--surface, #090909);
+  background: var(--surface-raised, #101010);
   border: 1px solid var(--border-soft, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   color: var(--fg-2, #b8b8b8);
   font-family: var(--font-body, sans-serif);
   font-size: 12px;
   line-height: 1.45;
+  pointer-events: none;
   opacity: 0;
   transform: translateY(4px);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* 挂件被拖到靠左边时，气泡翻到挂件右侧 —— 否则它会飘到屏幕外看不见。
-   由 JS 按 holder 的 left 是否放得下决定（见 mascot-dock.js 的 placeBubble）。 */
-.pm-dock-bubble.is-flipped {
-  right: auto;
-  left: calc(100% + 10px);
-}
-
-.pm-dock-bubble.is-on {
+.guobao-bubble.is-on {
   opacity: 1;
   transform: translateY(0);
 }
 
 /* ── 移动端 ───────────────────────────────────────────────── */
 
+/* 侧栏在 ≤640px 会收成顶部横条（见 app.css 的同名断点），
+   那一排塞不下 216px 方块，所以和 .theme-control 一样整体隐藏。
+   app.css 里的隐藏清单已同步加上 .guobao-slot。 */
 @media (max-width: 640px) {
-  /* 底部让开 66px，避开居中显示的 .toast（bottom:24px） */
-  .pm-dock {
-    right: 10px;
-    bottom: 66px;
-    width: calc(76px * var(--pm-scale, 1));
-  }
-  /* 390px 屏上 92px 占 24% 宽、会压住卡片右下角内容；76px 降到 19% */
-  .pm-dock-holder {
-    width: calc(76px * var(--pm-scale, 1));
-    height: calc(76px * var(--pm-scale, 1));
-  }
-  .pm-dock-bubble {
-    right: calc(100% + 6px);
-    bottom: 10px;
-    max-width: 140px;
-    padding: 6px 9px;
-    font-size: 11px;
-  }
-  .pm-dock-bubble.is-flipped {
-    right: auto;
-    left: calc(100% + 6px);
+  .guobao-slot {
+    display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pm-dock .gb-mascot {
+  .guobao-stage svg,
+  .guobao-bubble {
     transition: none;
   }
 }

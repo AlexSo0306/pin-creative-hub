@@ -30,6 +30,14 @@
 
       <div class="sidebar-spacer"></div>
 
+      <!-- 锅宝：正方形容器，固定在「界面主题」上方。
+           引擎是第三方 mood-mates（许可见 public/js/vendor/mood-mates/README.md）。
+           SVG 由 mascot-dock.js 挂进来，这里只留容器。 -->
+      <div class="guobao-slot" id="guobao-slot">
+        <div class="guobao-stage" id="guobao-stage" aria-hidden="true"></div>
+        <div class="guobao-bubble" id="guobao-bubble" role="status" aria-live="polite"></div>
+      </div>
+
       <div class="theme-control" aria-label="界面主题">
         <span>界面主题</span>
         <div class="theme-options" role="radiogroup">
@@ -51,6 +59,17 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- 锅宝表情引擎（第三方 mood-mates，非商业社区许可）。
+       ⚠ 加载顺序固定，不可调换：geometry → render → features → fx → emotions → engine → 角色 -->
+  <script defer src="/js/vendor/mood-mates/core/geometry.js"></script>
+  <script defer src="/js/vendor/mood-mates/core/render.js"></script>
+  <script defer src="/js/vendor/mood-mates/core/features.js"></script>
+  <script defer src="/js/vendor/mood-mates/core/fx.js"></script>
+  <script defer src="/js/vendor/mood-mates/data/emotions.js"></script>
+  <script defer src="/js/vendor/mood-mates/core/engine.js"></script>
+  <script defer src="/js/components/guobao.js"></script>
+
   <script type="module" src="/js/app.js"></script>
   <script type="module" src="/js/components/mascot-dock.js"></script>
 </body>

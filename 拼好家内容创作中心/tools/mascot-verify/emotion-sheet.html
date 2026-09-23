@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="framer">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锅宝 · 32 表情接触表（mood-mates 引擎）</title>
+<style>
+  :root { color-scheme: dark; --bg:#000; --surface:#0b0b0b; --fg:#fff; --muted:rgba(255,255,255,.58); --border:rgba(255,255,255,.09); --accent:#0099ff; }
+  :root[data-theme="fluent"] { color-scheme: light; --bg:#f3f5f8; --surface:#fff; --fg:#111318; --muted:rgba(17,19,24,.6); --border:rgba(17,19,24,.1); --accent:#0067c0; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; background:var(--bg); color:var(--fg);
+         font:13px/1.5 "Inter","PingFang SC",sans-serif; }
+  h1 { font-size:15px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:12px; margin-bottom:14px; }
+  .bar { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  button { background:var(--surface); color:var(--fg); border:1px solid var(--border);
+           border-radius:7px; padding:5px 11px; font:inherit; cursor:pointer; }
+  button[aria-pressed="true"] { border-color:var(--accent); color:var(--accent); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:10px; }
+  .cell { background:var(--surface); border:1px solid var(--border); border-radius:10px;
+          padding:8px 6px 6px; text-align:center; }
+  .stage { width:100%; aspect-ratio:1; }
+  .id { font-size:11px; color:var(--muted); margin-top:4px; letter-spacing:.02em; }
+  .nm { font-size:12px; margin-top:1px; }
+  #meta { color:var(--muted); font-size:12px; margin-top:14px; }
+</style>
+</head>
+<body>
+  <h1>锅宝 · 32 表情接触表</h1>
+  <div class="sub">mood-mates 引擎 · 角色 <code>guobao</code> · 每格静态渲染一帧（<code>autostart:false</code>）</div>
+
+  <div class="bar">
+    <button id="theme" type="button">切换主题</button>
+    <button id="sketch" type="button" aria-pressed="false">线稿</button>
+    <button id="reload" type="button">重渲染</button>
+    <span id="cnt" style="color:var(--muted)"></span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div id="meta"></div>
+
+  <!-- 引擎加载顺序固定：geometry → render → features → fx → emotions → engine -->
+  <script src="../../public/js/vendor/mood-mates/core/geometry.js"></script>
+  <script src="../../public/js/vendor/mood-mates/core/render.js"></script>
+  <script src="../../public/js/vendor/mood-mates/core/features.js"></script>
+  <script src="../../public/js/vendor/mood-mates/core/fx.js"></script>
+  <script src="../../public/js/vendor/mood-mates/data/emotions.js"></script>
+  <script src="../../public/js/vendor/mood-mates/core/engine.js"></script>
+  <!-- 角色 -->
+  <script src="../../public/js/components/guobao.js"></script>
+
+<script>
+(function () {
+  var ONLY = new URLSearchParams(location.search).get('only');
+  var onlyIds = ONLY ? ONLY.split(',').map(function (s) { return s.trim(); }) : null;
+
+  var grid = document.getElementById('grid');
+  var made = [];
+  var sketch = false;
+
+  function build() {
+    made.forEach(function (m) { try { m.destroy(); } catch (e) {} });
+    made = [];
+    grid.innerHTML = '';
+
+    var list = window.MoodMates.config.list().filter(function (d) {
+      return !onlyIds || onlyIds.indexOf(d.id) >= 0;
+    });
+
+    list.forEach(function (def) {
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      var stage = document.createElement('div');
+      stage.className = 'stage';
+      var idEl = document.createElement('div');
+      idEl.className = 'id';
+      idEl.textContent = def.id;
+      var nmEl = document.createElement('div');
+      nmEl.className = 'nm';
+      nmEl.textContent = def.name;
+      cell.append(stage, idEl, nmEl);
+      grid.appendChild(cell);
+
+      var m = window.MoodMates.create(stage, {
+        character: 'guobao',
+        emotion: def.id,
+        autostart: false,     // 静态渲染一帧：32 个实例不跑 rAF
+        lite: true            // 关掉粒子与 zzz
+      });
+      if (sketch) m.setStyle({ sketch: 1 });
+      made.push(m);
+    });
+
+    document.getElementById('cnt').textContent = '共 ' + list.length + ' 个';
+    document.getElementById('meta').textContent =
+      '角色数 ' + window.MoodMates.characters.list().length +
+      ' · 体态生成器 ' + window.MoodMates.geo.bodyTypes.join('/') +
+      ' · 眼形槽位 ' + window.MoodMates.geo.eyeSlots.length +
+      ' · 嘴形槽位 ' + window.MoodMates.geo.mouthSlots.length;
+  }
+
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement;
+    r.dataset.theme = r.dataset.theme === 'fluent' ? 'framer' : 'fluent';
+  });
+  document.getElementById('sketch').addEventListener('click', function () {
+    sketch = !sketch;
+    this.setAttribute('aria-pressed', String(sketch));
+    build();
+  });
+  document.getElementById('reload').addEventListener('click', build);
+
+  build();
+  window.__sheetReady = true;
+})();
+</script>
+</body>
+</html>

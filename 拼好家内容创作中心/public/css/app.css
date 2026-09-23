@@ -1645,6 +1645,7 @@ a:focus-visible {
 
   .brand small,
   .theme-control,
+  .guobao-slot,
   .sidebar-status,
   .sidebar-spacer {
     display: none;
