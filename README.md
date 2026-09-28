@@ -34,15 +34,12 @@
 （与应用代码的 `main` / `feature/*` 分支历史互相独立，互不影响）。
 浏览地址：https://github.com/AlexSo0306/pin-creative-hub/tree/ops-center
 
-推送方式（本机无 gh CLI、GitHub 需走 Clash 代理、凭据不落本仓库配置）：
+推送方式（GitHub 需走 Clash 代理；凭据走 macOS 钥匙串 osxkeychain，已在 09-28 替换掉原明文 PAT）：
 
 ```bash
-TOKEN=$(git -C /Users/alexso/WorkBuddy/pin-creative-hub remote get-url origin \
-  | sed -n 's/.*x-access-token:\([^@]*\)@.*/\1/p')
 env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy \
   git -c http.proxy=http://127.0.0.1:7890 -c https.proxy=http://127.0.0.1:7890 \
-  push "https://x-access-token:${TOKEN}@github.com/AlexSo0306/pin-creative-hub.git" \
-  main:refs/heads/ops-center
+  push origin main:refs/heads/ops-center
 ```
 
 ## 当前状态快照
