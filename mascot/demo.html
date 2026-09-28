@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="gicRo7GClPoYdrhOtWt6aM">
+<head data-page-node-id="HVBp3qK8Jb4DJCx5VHXwCJ">
+<meta charset="utf-8" data-page-node-id="fpTf6ZC1lXAZDgjylyRyAW" />
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="hIXnWS7tZCSDiHkRxLLIKE" />
+<title>锅宝 · 角色引擎学习台</title>
+<link rel="stylesheet" href="./mascot.css" data-page-node-id="qXAFpsAmTdTO44Lq1PlnDW" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #000000;
+    --surface: #090909;
+    --surface-raised: #101010;
+    --fg: #ffffff;
+    --fg-2: #b8b8b8;
+    --muted: rgba(255, 255, 255, 0.58);
+    --meta: rgba(255, 255, 255, 0.38);
+    --border: rgba(0, 153, 255, 0.18);
+    --border-soft: rgba(255, 255, 255, 0.08);
+    --accent: #0099ff;
+    --font-body: "Inter", -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "Azeret Mono", ui-monospace, "SF Mono", monospace;
+  }
+  :root[data-theme="fluent"] {
+    color-scheme: light;
+    --bg: #f3f5f8;
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --fg: #111318;
+    --fg-2: #454b55;
+    --muted: rgba(17, 19, 24, 0.6);
+    --meta: rgba(17, 19, 24, 0.42);
+    --border: rgba(0, 103, 192, 0.18);
+    --border-soft: rgba(17, 19, 24, 0.1);
+    --accent: #0067c0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 64px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 17px; font-weight: 500; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 13px; font-weight: 500; margin: 34px 0 12px; color: var(--muted); letter-spacing: 0.02em; }
+  .sub { color: var(--meta); font-size: 12px; margin: 0 0 26px; }
+  .sub code { font-family: var(--font-mono); color: var(--fg-2); }
+  .stage {
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 26px 22px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 26px 30px;
+    align-items: flex-end;
+  }
+  .cell { text-align: center; }
+  .cell .cap {
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--meta);
+    letter-spacing: 0.04em;
+  }
+  .hero {
+    display: flex;
+    gap: 34px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .hero-stage {
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 8px;
+  }
+  .controls { display: flex; flex-direction: column; gap: 14px; min-width: 260px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .row > span.lbl {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--meta);
+    width: 56px;
+    letter-spacing: 0.04em;
+  }
+  button {
+    padding: 6px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border-soft);
+    background: var(--surface-raised);
+    color: var(--fg-2);
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  button:hover { border-color: var(--border); color: var(--fg); }
+  button.is-on { border-color: var(--accent); color: var(--accent); }
+  input[type="range"] { accent-color: var(--accent); width: 168px; }
+  .mono { font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); }
+  .note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-left: 2px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 8px 8px 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    max-width: 620px;
+  }
+</style>
+</head>
+<body data-page-node-id="mhHHdLskiMWCqsClM4uDwA">
+
+<h1 data-page-node-id="ODHJdrbAsu8YjMF05LIawI">锅宝 · 角色引擎学习台</h1>
+<p class="sub" data-page-node-id="YXKaoF37xESdFAiZieRbhR">
+  clean-room 复刻：blob 形变 + 弹簧动画 + 多边形眼睛 + 状态机 · 零依赖原生 ESM ·
+  配色走工作台 token <code data-page-node-id="hoKdcIAGC9nVJ63moiKwBA">--surface-raised / --accent / --fg</code>
+</p>
+
+<div class="hero" data-page-node-id="weRQ5IPccHdytVfg2rP6XF">
+  <div class="hero-stage" data-page-node-id="9oLVwn0bYT154l6hlbqsBN"><div id="hero" data-page-node-id="Xz99gZHSy1BRrONN0fF1ff"></div></div>
+  <div class="controls" data-page-node-id="o2WrF6lcy9DKZX47OGRGZ1">
+    <div class="row" data-page-node-id="K3b1cz448fGwVHZFENpUwF">
+      <span class="lbl" data-page-node-id="D6cDDWWeQFiWFQAKnoErFt">状态</span>
+      <span id="state-buttons" data-page-node-id="hCN7pLEE4XJhS8fAikwV4M"></span>
+    </div>
+    <div class="row" data-page-node-id="7fT1nbHZrGiAxvYdGFwYZK">
+      <span class="lbl" data-page-node-id="FYsf5oCUDSHwdORkQKYxh6">能量</span>
+      <input id="energy" type="range" min="0" max="100" value="70" data-page-node-id="BlYrNp7UAm1qkFtyFG7SRD" />
+      <span class="mono" id="energy-val" data-page-node-id="h58e4zN119jNjy2LbS0evE">0.70</span>
+    </div>
+    <div class="row" data-page-node-id="tho2MlUP04L8NQibAGDuLs">
+      <span class="lbl" data-page-node-id="xWcSpWDKp5jUuFqZn8pDSv">选项</span>
+      <button id="toggle-follow" class="is-on" data-page-node-id="uSj2lQNLE3o5T4f4lhBvtz">指针跟随</button>
+      <button id="toggle-theme" data-page-node-id="DaOGt192Ea9rbSGTmAbrsi">切换主题</button>
+      <button id="btn-destroy" data-page-node-id="YtxIsfMDUdfNoAvGS3SPkZ">销毁</button>
+    </div>
+    <div class="note" data-page-node-id="WvssNgf5HZbd7j0sKJOj3w">
+      能量只影响呼吸频率与眨眼间隔 —— 用来把「今天还剩多少活」这类真实数据接进角色。
+      点角色本体可触发一次回弹。
+    </div>
+  </div>
+</div>
+
+<h2 data-page-node-id="UeaucW4s4Uck2hFRHkYzYc">七态对照（每态一个独立实例）</h2>
+<div class="stage" id="grid" data-page-node-id="zmr2CaYXJMrsLgZDGQ5XqX"></div>
+
+<script type="module">
+import { createMascot, MASCOT_STATES } from './mascot.js';
+
+/* 主实例 */
+let hero = createMascot(document.getElementById('hero'), {
+  state: 'idle',
+  energy: 0.7,
+  followPointer: true,
+  scale: 1.35,
+});
+
+const buttons = document.getElementById('state-buttons');
+const stateNames = Object.keys(MASCOT_STATES);
+stateNames.forEach((name) => {
+  const b = document.createElement('button');
+  b.textContent = MASCOT_STATES[name].label;
+  b.dataset.state = name;
+  b.addEventListener('click', () => {
+    hero.setState(name);
+    [...buttons.children].forEach((x) => x.classList.toggle('is-on', x === b));
+  });
+  buttons.appendChild(b);
+});
+buttons.firstChild.classList.add('is-on');
+
+document.getElementById('energy').addEventListener('input', (ev) => {
+  const v = Number(ev.target.value) / 100;
+  hero.setEnergy(v);
+  document.getElementById('energy-val').textContent = v.toFixed(2);
+});
+
+document.getElementById('toggle-follow').addEventListener('click', (ev) => {
+  const on = !ev.target.classList.contains('is-on');
+  ev.target.classList.toggle('is-on', on);
+  hero.setPointerFollow(on);
+});
+
+document.getElementById('toggle-theme').addEventListener('click', () => {
+  const root = document.documentElement;
+  const next = root.getAttribute('data-theme') === 'fluent' ? '' : 'fluent';
+  if (next) root.setAttribute('data-theme', next);
+  else root.removeAttribute('data-theme');
+});
+
+document.getElementById('btn-destroy').addEventListener('click', (ev) => {
+  if (hero) {
+    hero.destroy();
+    hero = null;
+    ev.target.textContent = '已销毁';
+    ev.target.disabled = true;
+  }
+});
+
+/* 七态网格：静态对照，各自独立实例 */
+const grid = document.getElementById('grid');
+stateNames.forEach((name) => {
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  const holder = document.createElement('div');
+  const cap = document.createElement('div');
+  cap.className = 'cap';
+  cap.textContent = name;
+  cell.append(holder, cap);
+  grid.appendChild(cell);
+  createMascot(holder, { state: name, energy: 0.7, followPointer: false, scale: 0.78 });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "duration": 66.41,
+  "resolution": "1080x1920",
+  "fps": 60.0
+}

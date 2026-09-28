@@ -1,0 +1,1318 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="fluent">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拼好家 · 验证闭环（原型 v1）</title>
+<style>
+/* ============================================================
+   Token 层 —— 逐字对齐 pin-creative-hub/public/css/app.css
+   默认 fluent（浅色）；data-theme="framer" 为深色
+   ============================================================ */
+:root {
+  color-scheme: light;
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --fg: #111318;
+  --fg-2: #454b55;
+  --muted: rgba(17, 19, 24, 0.6);
+  --meta: rgba(17, 19, 24, 0.42);
+  --border: rgba(0, 103, 192, 0.18);
+  --border-soft: rgba(17, 19, 24, 0.1);
+  --accent: #0067c0;
+  --accent-on: #ffffff;
+  --hover: rgba(17, 19, 24, 0.04);
+  --sidebar: #e9edf3;
+  --input: #f7f8fa;
+  --shadow: 0 18px 60px rgba(27, 36, 50, 0.14);
+  --ok: #15803d;
+  --bad: #b91c1c;
+  --warnc: #b45309;
+  --bar-miss: rgba(17, 19, 24, 0.16);
+  --font-display: "GT Walsheim", "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Azeret Mono", "SFMono-Regular", Consolas, monospace;
+}
+:root[data-theme="framer"] {
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: #090909;
+  --surface-raised: #101010;
+  --fg: #ffffff;
+  --fg-2: #b8b8b8;
+  --muted: rgba(255, 255, 255, 0.58);
+  --meta: rgba(255, 255, 255, 0.38);
+  --border: rgba(0, 153, 255, 0.18);
+  --border-soft: rgba(255, 255, 255, 0.08);
+  --accent: #0099ff;
+  --accent-on: #ffffff;
+  --hover: rgba(255, 255, 255, 0.05);
+  --sidebar: #050505;
+  --input: #0e0e0e;
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.42);
+  --ok: #4ade80;
+  --bad: #f87171;
+  --warnc: #fbbf24;
+  --bar-miss: rgba(255, 255, 255, 0.18);
+}
+
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { color: inherit; font: inherit; }
+button { border: 0; }
+a { color: inherit; text-decoration: none; }
+
+/* ============================================================
+   外壳 —— 复刻 app-shell / sidebar / app-main
+   ============================================================ */
+.app-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+
+.sidebar {
+  position: fixed; top: 0; left: 0; width: 248px; height: 100vh;
+  display: flex; flex-direction: column;
+  padding: 22px 16px 18px; overflow: hidden;
+  background: var(--sidebar);
+  border-right: 1px solid var(--border-soft);
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 0 6px 22px; }
+.brand-mark {
+  display: grid; place-content: center; width: 34px; height: 34px; flex: none;
+  border-radius: 9px; background: var(--accent); color: var(--accent-on);
+  font-weight: 700; font-size: 16px;
+}
+.brand strong { display: block; font-size: 14px; letter-spacing: 0.02em; }
+.brand small { display: block; color: var(--meta); font-size: 11px; letter-spacing: 0.06em; }
+
+.main-nav { display: flex; flex-direction: column; gap: 2px; }
+.main-nav a {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 12px; border-radius: 7px;
+  color: var(--muted); font-size: 13.5px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.main-nav a:hover { background: var(--hover); color: var(--fg-2); }
+.main-nav a.active { background: var(--hover); color: var(--fg); font-weight: 600; }
+.nav-icon { width: 16px; text-align: center; font-size: 13px; opacity: 0.8; }
+.nav-badge {
+  margin-left: auto; padding: 1px 7px; border-radius: 999px;
+  background: var(--accent); color: var(--accent-on);
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em;
+}
+
+.sidebar-spacer { flex: 1; }
+
+.theme-control { padding: 12px 6px; border-top: 1px solid var(--border-soft); }
+.theme-control > span { display: block; color: var(--meta); font-size: 11px; letter-spacing: 0.06em; margin-bottom: 8px; }
+.theme-options { display: flex; gap: 8px; }
+.theme-options button {
+  width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; background: #000; transition: border-color 0.15s;
+}
+.theme-options button[data-theme-value="fluent"] { background: #f3f5f8; box-shadow: inset 0 0 0 1px var(--border-soft); }
+.theme-options button[aria-pressed="true"] { border-color: var(--accent); }
+
+.sidebar-status {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 6px 0; border-top: 1px solid var(--border-soft);
+  color: var(--meta); font-size: 11px;
+}
+.sidebar-status small { margin-left: auto; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); flex: none; }
+
+.app-main { grid-column: 2; padding: 30px 34px 90px; max-width: 1200px; }
+.app-main:focus { outline: none; }
+
+/* ============================================================
+   页头 / 原型声明
+   ============================================================ */
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.page-head h1 { margin: 0; font-family: var(--font-display); font-size: 25px; font-weight: 700; letter-spacing: -0.01em; }
+.page-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+.head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.proto-banner {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 18px 0 26px; padding: 11px 15px;
+  border: 1px dashed var(--border); border-radius: 8px;
+  color: var(--fg-2); font-size: 12.5px;
+}
+.proto-banner b { color: var(--fg); font-weight: 600; }
+
+/* ============================================================
+   卡片 / 指标 / 分区
+   ============================================================ */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.section { margin-top: 26px; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.section-head h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+.section-head p { margin: 0; color: var(--meta); font-size: 12.5px; }
+
+.summary-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+}
+.summary-grid > .metric + .metric { border-left: 1px solid var(--border-soft); }
+.metric { display: flex; flex-direction: column; gap: 6px; padding: 20px; min-height: 132px; }
+.metric .k { color: var(--meta); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; }
+.metric .v { font-family: var(--font-display); font-size: 33px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.metric .v small { font-size: 15px; font-weight: 600; color: var(--muted); margin-left: 2px; }
+.metric .d { margin-top: auto; color: var(--muted); font-size: 12.5px; }
+.metric .d b { color: var(--fg-2); font-weight: 600; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 600;
+  border: 1px solid var(--border-soft); color: var(--fg-2);
+}
+.pill.run { color: var(--accent); border-color: var(--border); background: var(--hover); }
+.pill.ok { color: var(--ok); border-color: rgba(21, 128, 61, 0.32); background: rgba(21, 128, 61, 0.08); }
+.pill.warn { color: var(--warnc); border-color: rgba(180, 83, 9, 0.3); background: rgba(180, 83, 9, 0.08); }
+.pill.bad { color: var(--bad); border-color: rgba(185, 28, 28, 0.3); background: rgba(185, 28, 28, 0.07); }
+
+/* ============================================================
+   按钮 / 表单
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 7px; cursor: pointer;
+  border: 1px solid var(--border-soft); background: var(--surface-raised);
+  color: var(--fg); font-size: 13px; font-weight: 500;
+  transition: background 0.15s, border-color 0.15s, filter 0.15s;
+}
+.btn:hover { background: var(--hover); }
+.btn.primary { background: var(--accent); border-color: transparent; color: var(--accent-on); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; }
+.btn.sm { padding: 5px 11px; font-size: 12px; border-radius: 6px; }
+.btn.tiny { padding: 3px 8px; font-size: 11.5px; border-radius: 5px; color: var(--meta); background: transparent; }
+.btn.tiny:hover { color: var(--bad); background: var(--hover); }
+
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field.full { grid-column: 1 / -1; }
+.field > label { color: var(--muted); font-size: 12px; font-weight: 500; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 9px 11px; border-radius: 7px;
+  border: 1px solid var(--border-soft); background: var(--input); color: var(--fg);
+  font-size: 13px; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field textarea { resize: vertical; min-height: 74px; line-height: 1.55; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 103, 192, 0.12);
+}
+:root[data-theme="framer"] .field input:focus,
+:root[data-theme="framer"] .field select:focus,
+:root[data-theme="framer"] .field textarea:focus { box-shadow: 0 0 0 3px rgba(0, 153, 255, 0.16); }
+.field .hint { color: var(--meta); font-size: 11.5px; }
+.field .err { color: var(--bad); font-size: 11.5px; min-height: 15px; }
+.form-actions { display: flex; gap: 9px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+
+/* ============================================================
+   表格 / 进度
+   ============================================================ */
+.tbl-wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th {
+  padding: 0 10px 10px; text-align: left; white-space: nowrap;
+  color: var(--meta); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border-soft);
+}
+.tbl td { padding: 11px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+.tbl tbody tr:last-child td { border-bottom: 0; }
+.tbl tbody tr:hover { background: var(--hover); }
+.tbl .r { text-align: right; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.tag-hit { color: var(--ok); font-weight: 600; font-size: 12px; }
+.tag-miss { color: var(--muted); font-size: 12px; }
+
+.progress { height: 8px; border-radius: 999px; background: var(--hover); overflow: hidden; }
+.progress > i { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.35s ease; }
+.progress.ok > i { background: var(--ok); }
+.progress.bad > i { background: var(--bad); }
+.progress-meta { display: flex; justify-content: space-between; color: var(--meta); font-size: 11.5px; margin-top: 7px; }
+
+/* ============================================================
+   判定卡
+   ============================================================ */
+.verdict { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.verdict-head { display: flex; gap: 14px; align-items: flex-start; padding: 20px; border-bottom: 1px solid var(--border-soft); }
+.verdict-mark {
+  display: grid; place-content: center; flex: none;
+  width: 40px; height: 40px; border-radius: 11px;
+  font-size: 20px; font-weight: 700; line-height: 1;
+}
+.verdict-mark.ok { background: rgba(21, 128, 61, 0.1); color: var(--ok); }
+.verdict-mark.warn { background: rgba(180, 83, 9, 0.1); color: var(--warnc); }
+.verdict-mark.bad { background: rgba(185, 28, 28, 0.09); color: var(--bad); }
+.verdict-head h3 { margin: 0 0 3px; font-size: 16px; font-weight: 700; }
+.verdict-head p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.verdict-body { padding: 16px 20px; display: grid; gap: 9px; }
+.vrow { display: flex; gap: 9px; font-size: 13px; color: var(--fg-2); align-items: baseline; }
+.vrow .dot { color: var(--meta); flex: none; }
+.vrow b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.verdict-rule {
+  padding: 12px 20px; border-top: 1px solid var(--border-soft);
+  color: var(--meta); font-size: 11.5px; line-height: 1.65;
+}
+.verdict-rule code {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 1px 5px; border-radius: 4px; background: var(--hover); color: var(--fg-2);
+}
+.verdict-foot { padding: 15px 20px; border-top: 1px solid var(--border-soft); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* ============================================================
+   图表
+   ============================================================ */
+.chart-wrap { width: 100%; overflow-x: auto; }
+.chart-wrap svg { display: block; width: 100%; min-width: 520px; height: auto; }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px; color: var(--muted); font-size: 12px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { display: block; width: 14px; height: 3px; border-radius: 2px; }
+.legend i.bar { width: 10px; height: 10px; border-radius: 3px; }
+
+/* ============================================================
+   空态 / 说明块
+   ============================================================ */
+.empty-state {
+  display: grid; place-content: center; gap: 12px; justify-items: center;
+  min-height: 260px; padding: 36px; text-align: center;
+  border: 1px dashed var(--border-soft); border-radius: 8px;
+}
+.empty-state .big { font-size: 30px; opacity: 0.5; }
+.empty-state h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.empty-state p { margin: 0; max-width: 46ch; color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+.note-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.note { padding: 16px 18px; border-radius: 8px; border: 1px solid var(--border-soft); background: var(--surface); }
+.note h4 { margin: 0 0 8px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.02em; }
+.note h4.gap { color: var(--bad); }
+.note h4.fill { color: var(--ok); }
+.note ul { margin: 0; padding-left: 17px; color: var(--fg-2); font-size: 12.5px; line-height: 1.75; }
+.note li + li { margin-top: 3px; }
+
+.kv-inline { display: flex; gap: 22px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; }
+.kv-inline b { color: var(--fg); font-family: var(--font-mono); font-size: 12.5px; }
+
+/* ============================================================
+   Toast
+   ============================================================ */
+.toast {
+  position: fixed; left: 50%; bottom: 34px; transform: translate(-50%, 16px);
+  padding: 11px 20px; border-radius: 999px;
+  background: var(--fg); color: var(--bg);
+  font-size: 13px; font-weight: 500;
+  opacity: 0; pointer-events: none; transition: opacity 0.22s, transform 0.22s;
+  z-index: 90; max-width: 84vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ============================================================
+   响应式（对齐 app.css 断点：1120 / 860 / 640）
+   ============================================================ */
+@media (max-width: 1120px) {
+  .app-shell { grid-template-columns: 216px minmax(0, 1fr); }
+  .sidebar { width: 216px; }
+  .app-main { padding: 26px 24px 90px; }
+}
+@media (max-width: 860px) {
+  .app-shell { grid-template-columns: minmax(0, 1fr); }
+  .sidebar {
+    position: static; width: auto; height: auto;
+    padding: 14px 16px; border-right: 0; border-bottom: 1px solid var(--border-soft);
+  }
+  .brand { padding-bottom: 12px; }
+  .main-nav { flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 4px; }
+  .main-nav a { white-space: nowrap; padding: 7px 11px; }
+  .nav-badge { margin-left: 6px; }
+  .sidebar-spacer, .theme-control { display: none; }
+  .sidebar-status { padding-top: 10px; }
+  .app-main { grid-column: 1; padding: 20px 16px 80px; }
+  .summary-grid { grid-template-columns: minmax(0, 1fr); }
+  .summary-grid > .metric + .metric { border-left: 0; border-top: 1px solid var(--border-soft); }
+  .metric { min-height: 0; padding: 16px 18px; }
+  .form-grid, .note-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .page-head h1 { font-size: 21px; }
+  .head-actions { width: 100%; }
+  .head-actions .btn { flex: 1; justify-content: center; }
+  .metric .v { font-size: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">拼</span>
+      <span>
+        <strong>拼好家</strong>
+        <small>运营创作中心</small>
+      </span>
+    </div>
+
+    <nav class="main-nav" aria-label="主要导航" id="nav">
+      <a href="#/dashboard" data-route="dashboard"><span class="nav-icon">⌂</span>今日工作台</a>
+      <a href="#/inspiration" data-route="inspiration"><span class="nav-icon">⌁</span>灵感雷达</a>
+      <a href="#/content-plan" data-route="content-plan"><span class="nav-icon">▦</span>内容计划</a>
+      <a href="#/review" data-route="review"><span class="nav-icon">↗</span>数据复盘</a>
+      <a href="#/validation" data-route="validation" class="active"><span class="nav-icon">◎</span>验证闭环<span class="nav-badge">NEW</span></a>
+      <a href="#/accounts" data-route="accounts"><span class="nav-icon">◈</span>账号矩阵</a>
+      <a href="#/knowledge" data-route="knowledge"><span class="nav-icon">◇</span>知识资产</a>
+    </nav>
+
+    <div class="sidebar-spacer"></div>
+
+    <div class="theme-control" aria-label="界面主题">
+      <span>界面主题</span>
+      <div class="theme-options" role="group">
+        <button type="button" data-theme-value="framer" aria-label="深色主题" title="深色主题"></button>
+        <button type="button" data-theme-value="fluent" aria-label="浅色主题" title="浅色主题"></button>
+      </div>
+    </div>
+
+    <div class="sidebar-status">
+      <span class="status-dot"></span>
+      <span>原型 · 本地存储</span>
+      <small>v1.0</small>
+    </div>
+  </aside>
+
+  <main class="app-main" id="app" tabindex="-1"></main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================================
+   拼好家 · 验证闭环模块 —— 单文件可交互原型 v1
+   ---------------------------------------------------------------------------
+   这个原型要验证的产品假设（业务侧）：
+     「6 秒微预告片（六拍结构）+ 价格反差字幕」能把 5s 完播率从 27% 拉到 ≥50%
+   这个原型要验证的自身假设（可用性）：
+     用户能否不问一句、独立走完「建假设 → 攒样本 → 看判定 → 沉淀结论」
+   ---------------------------------------------------------------------------
+   无依赖 / 无构建 / 无网络。数据存 localStorage，可一键重置。
+   ============================================================================ */
+
+'use strict';
+
+const LS_KEY = 'phj-validation-prototype-v1';
+
+/* 真实基线（来自 0904 诊断报告 + 2026-07 作品表） */
+const BASELINE = { retention5s: 27, bounce2s: 43.2, avgDuration: 6.6 };
+
+/* 一菜一发：可挂载的内容卡（来自真实选题） */
+const DISHES = [
+  '番茄红酒炖牛肋条', '豆豉干煎鸡', '水煎肉拌饭', '梅渍小番茄',
+  '京葱鸡胸肉饭', '徐福烩饭复刻', '双层芝士汉堡盖饭', '番茄牛腩面'
+];
+
+/* ------------------------------------------------------------------ 工具 */
+
+const $ = (sel, root) => (root || document).querySelector(sel);
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+const pct = v => (v * 100).toFixed(1) + '%';
+const pt = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + 'pt';
+
+let toastTimer = null;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+/* ------------------------------------------------------------------ 状态 */
+
+let store = loadStore();   // { experiment: null | {...} }
+let view = store.experiment ? 'experiment' : 'empty';
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return { experiment: null };
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return { experiment: null };
+    return { experiment: parsed.experiment || null };
+  } catch (e) {
+    return { experiment: null };
+  }
+}
+function saveStore() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(store)); } catch (e) { /* 无痕模式忽略 */ }
+}
+
+/* ------------------------------------------------- 实验判定（唯一真值来源） */
+
+/**
+ * 判定规则（写在界面上，不是黑盒）：
+ *   样本未满      → 证据不足
+ *   样本满 且 均值 ≥ 阈值 且 达标条数 ≥ ⌈目标 × 2/3⌉ → 达标
+ *   否则          → 未达标
+ */
+function evaluate(exp) {
+  const s = exp.samples;
+  const n = s.length;
+  const target = exp.target;
+  const thr = exp.threshold;
+  const needHits = Math.ceil(target * 2 / 3);
+
+  if (n === 0) {
+    return { level: 'none', n, target, thr, needHits, mean: null, hits: 0, gap: target };
+  }
+  const mean = s.reduce((a, b) => a + b.retention5s, 0) / n;
+  const hits = s.filter(x => x.retention5s >= thr).length;
+
+  if (n < target) {
+    return { level: 'insufficient', n, target, thr, needHits, mean, hits, gap: target - n };
+  }
+  const pass = mean >= thr && hits >= needHits;
+  return { level: pass ? 'pass' : 'fail', n, target, thr, needHits, mean, hits, gap: 0 };
+}
+
+const VERDICT_META = {
+  none:         { mark: '—', cls: 'warn', pill: 'run',  pillText: '待录入' },
+  insufficient: { mark: '⏳', cls: 'warn', pill: 'run',  pillText: '运行中' },
+  pass:         { mark: '✓', cls: 'ok',   pill: 'ok',   pillText: '已判定 · 达标' },
+  fail:         { mark: '✕', cls: 'bad',  pill: 'bad',  pillText: '已判定 · 未达标' }
+};
+
+/* ------------------------------------------------------------------ 动作 */
+
+function createExperiment(f) {
+  store.experiment = {
+    id: 'exp-' + Date.now(),
+    title: f.title,
+    hypothesis: f.hypothesis,
+    metric: f.metric,
+    threshold: f.threshold,
+    target: f.target,
+    baseline: f.baseline,
+    secondary: f.secondary,
+    createdAt: new Date().toISOString(),
+    samples: [],
+    sedimented: false
+  };
+  view = 'experiment';
+  saveStore();
+  render();
+  toast('实验已创建 · 开始录入样本');
+}
+
+function addSample(s) {
+  const exp = store.experiment;
+  if (!exp) return;
+  exp.samples.push(Object.assign({ id: 's-' + Date.now() + '-' + Math.floor(Math.random() * 1e4) }, s));
+  saveStore();
+  render();
+  toast('已录入 · ' + s.dish);
+}
+
+function removeSample(id) {
+  const exp = store.experiment;
+  if (!exp) return;
+  exp.samples = exp.samples.filter(x => x.id !== id);
+  exp.sedimented = false;
+  saveStore();
+  render();
+  toast('已移除该样本');
+}
+
+function sediment() {
+  const exp = store.experiment;
+  if (!exp) return;
+  exp.sedimented = true;
+  saveStore();
+  render();
+  toast('已沉淀为知识资产草稿');
+}
+
+function resetAll() {
+  if (!window.confirm('重置原型：清空当前实验与全部样本？')) return;
+  store = { experiment: null };
+  view = 'empty';
+  saveStore();
+  render();
+  toast('已重置');
+}
+
+function loadDemo() {
+  const days = ['08-12', '08-14', '08-16', '08-18'];
+  const picks = [
+    { dish: DISHES[0], retention5s: 0.402, bounce2s: 0.331, avgDuration: 8.4, duration: 66.4 },
+    { dish: DISHES[1], retention5s: 0.468, bounce2s: 0.302, avgDuration: 9.1, duration: 71.2 },
+    { dish: DISHES[2], retention5s: 0.521, bounce2s: 0.281, avgDuration: 9.8, duration: 63.8 },
+    { dish: DISHES[3], retention5s: 0.436, bounce2s: 0.318, avgDuration: 8.9, duration: 58.6 }
+  ];
+  store.experiment = {
+    id: 'exp-demo',
+    title: '六拍预告片 · 5s 完播验证',
+    hypothesis: '把开头改成「6 秒微预告片」六拍结构（封面 → 开盖爆点 → 装盘价值 → 食材全景 → 双人份人设 → 教程开始），并在前 3 秒挂价格反差字幕，5s 完播率能从 27% 拉到 50% 以上。',
+    metric: '5s完播率',
+    threshold: 0.5,
+    target: 6,
+    baseline: 0.27,
+    secondary: '2s跳出率',
+    createdAt: new Date().toISOString(),
+    samples: picks.map((p, i) => Object.assign(
+      { id: 'demo-' + i, publishedAt: '2026-' + days[i] },
+      p
+    )),
+    sedimented: false
+  };
+  view = 'experiment';
+  saveStore();
+  render();
+  toast('已载入演示进度 · 4 / 6 条');
+}
+
+/* ============================================================================
+   渲染
+   ============================================================================ */
+
+function render() {
+  const app = $('#app');
+  if (view === 'new') app.innerHTML = viewNewExperiment();
+  else if (view === 'other') app.innerHTML = viewOther();
+  else if (view === 'empty' || !store.experiment) app.innerHTML = viewEmpty();
+  else app.innerHTML = viewExperiment(store.experiment);
+
+  // 主题按钮状态
+  document.querySelectorAll('.theme-options button').forEach(b => {
+    b.setAttribute('aria-pressed', String(b.dataset.themeValue === document.documentElement.dataset.theme));
+  });
+}
+
+/* ------------------------------------------------------------ 空状态 */
+
+function viewEmpty() {
+  return `
+    <div class="page-head">
+      <div>
+        <h1>验证闭环</h1>
+        <p>一个假设 · 一批样本 · 一个阈值 · 一个判定</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn ghost" data-act="demo">载入演示进度</button>
+        <button class="btn primary" data-act="new">＋ 新建实验</button>
+      </div>
+    </div>
+
+    <div class="proto-banner">
+      <b>原型说明</b>
+      <span>假数据 · 单文件 · 存本地 · 可重置。只做「验证闭环」一个模块，其余模块保持现网状态。</span>
+    </div>
+
+    <div class="empty-state">
+      <div class="big">◎</div>
+      <h3>还没有实验</h3>
+      <p>这里不存内容、不排期——只做一件事：把「一个假设」跑成「一个有数字的结论」。</p>
+      <button class="btn primary" data-act="new">新建第一个实验</button>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>为什么需要这个模块</h2>
+        <p>来自能力栈 ↔ 模块映射（2026-09-21）</p>
+      </div>
+      <div class="note-grid">
+        <div class="note">
+          <h4 class="gap">现在断在哪</h4>
+          <ul>
+            <li>数据复盘缺<b>完播类字段</b> → 漏斗第二环（留存）算不出来</li>
+            <li>复盘结论只有「本期什么有效」，没有假设 / 样本量 / 指标 / 阈值</li>
+            <li>发现问题的地方，和验证修复的地方，<b>同时不存在</b></li>
+          </ul>
+        </div>
+        <div class="note">
+          <h4 class="fill">这个模块补什么</h4>
+          <ul>
+            <li>把 5s 完播 / 2s 跳出 / 均播时长<b>落成字段</b>，逐条挂在内容上</li>
+            <li>实验 = 假设 + 样本量 + 阈值 + 判定规则，四件齐全才算一个实验</li>
+            <li>一菜一发 → 一条内容 = 一个变量，结论可干净归因</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------ 新建实验 */
+
+function viewNewExperiment() {
+  return `
+    <div class="page-head">
+      <div>
+        <h1>新建实验</h1>
+        <p>先把「什么算成功」写死，再开始攒样本</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn ghost" data-act="cancel-new">取消</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <form id="exp-form" novalidate>
+          <div class="form-grid">
+            <div class="field full">
+              <label for="f-title">实验名</label>
+              <input id="f-title" name="title" maxlength="40" placeholder="例：六拍预告片 · 5s 完播验证">
+              <div class="err" data-err="title"></div>
+            </div>
+
+            <div class="field full">
+              <label for="f-hyp">假设（写成一句可被证伪的话）</label>
+              <textarea id="f-hyp" name="hypothesis" maxlength="240"
+                placeholder="例：把开头改成六拍微预告片 + 前 3 秒价格反差字幕，5s 完播率能从 27% 拉到 50% 以上。"></textarea>
+              <div class="hint">写不出来的话，说明这个想法还不可验证。</div>
+              <div class="err" data-err="hypothesis"></div>
+            </div>
+
+            <div class="field">
+              <label for="f-metric">主指标</label>
+              <select id="f-metric" name="metric">
+                <option value="5s完播率" selected>5s 完播率</option>
+                <option value="2s跳出率">2s 跳出率</option>
+                <option value="平均播放时长">平均播放时长</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="f-threshold">达标阈值（%）</label>
+              <input id="f-threshold" name="threshold" type="number" step="1" min="1" max="100" value="50">
+              <div class="hint">健康线 60%，本次目标 50%，当前基线 27%。</div>
+              <div class="err" data-err="threshold"></div>
+            </div>
+
+            <div class="field">
+              <label for="f-target">样本量（条）</label>
+              <input id="f-target" name="target" type="number" step="1" min="1" max="30" value="6">
+              <div class="hint">连发 5–7 条才能排除单条运气，默认 6。</div>
+              <div class="err" data-err="target"></div>
+            </div>
+
+            <div class="field">
+              <label for="f-baseline">对照基线（%）</label>
+              <input id="f-baseline" name="baseline" type="number" step="0.1" min="0" max="100" value="27">
+              <div class="hint">改造前的 5s 完播率，来自 0904 诊断。</div>
+            </div>
+
+            <div class="field full">
+              <label for="f-secondary">辅助观察（可选）</label>
+              <input id="f-secondary" name="secondary" value="2s跳出率" maxlength="20">
+              <div class="hint">主指标达标、辅助指标不恶化，才算干净结论。</div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn primary">创建实验</button>
+            <button type="button" class="btn ghost" data-act="cancel-new">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <div class="section-head" style="margin-bottom:10px">
+          <h2>判定规则（创建后按此自动判定）</h2>
+        </div>
+        <div class="kv-inline">
+          <span>样本未满 → <b>证据不足</b></span>
+          <span>样本满 且 均值 ≥ 阈值 且 达标条数 ≥ ⌈目标 × 2/3⌉ → <b>达标</b></span>
+          <span>其余 → <b>未达标</b></span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------ 其他模块 */
+
+function viewOther() {
+  return `
+    <div class="page-head">
+      <div>
+        <h1>本原型只做「验证闭环」</h1>
+        <p>其余六个模块在现网工作台里已实现，这里不重复造</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn primary" data-act="back-validation">回到验证闭环</button>
+      </div>
+    </div>
+    <div class="section">
+      <div class="empty-state">
+        <div class="big">↩</div>
+        <h3>点错了导航？</h3>
+        <p>这是原型的边界声明：只验证「验证闭环」这一个模块的可用性，不碰其他模块。</p>
+      </div>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------ 实验详情 */
+
+function viewExperiment(exp) {
+  const v = evaluate(exp);
+  const meta = VERDICT_META[v.level];
+  const meanPct = v.mean == null ? null : v.mean;
+  const delta = meanPct == null ? null : meanPct - exp.baseline;
+
+  return `
+    <div class="page-head">
+      <div>
+        <h1>${esc(exp.title)}</h1>
+        <p>${esc(exp.hypothesis)}</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn ghost" data-act="reset">重置原型</button>
+      </div>
+    </div>
+
+    <div class="proto-banner">
+      <span class="pill ${meta.pill}">${meta.pillText}</span>
+      <span>主指标 <b>${esc(exp.metric)}</b> · 阈值 <b>${pct(exp.threshold)}</b> · 样本量 <b>${exp.target}</b> 条</span>
+    </div>
+
+    <div class="summary-grid">
+      <div class="metric">
+        <span class="k">达标阈值</span>
+        <span class="v">${(exp.threshold * 100).toFixed(0)}<small>%</small></span>
+        <span class="d">基线 <b>${(exp.baseline * 100).toFixed(0)}%</b> · 健康线 60%</span>
+      </div>
+      <div class="metric">
+        <span class="k">当前均值</span>
+        <span class="v">${meanPct == null ? '—' : (meanPct * 100).toFixed(1) + '<small>%</small>'}</span>
+        <span class="d">${delta == null ? '还没有样本' : '较基线 <b>' + pt(delta) + '</b>'}</span>
+      </div>
+      <div class="metric">
+        <span class="k">样本进度</span>
+        <span class="v">${v.n}<small> / ${v.target}</small></span>
+        <span class="d">${v.n >= v.target ? '样本已满，判定已出' : '还差 <b>' + v.gap + '</b> 条'}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>判定</h2>
+        <p>规则：样本满 ${v.target} 条 · 均值 ≥ ${pct(v.thr)} · 达标条数 ≥ ${v.needHits} 条</p>
+      </div>
+      ${verdictCard(exp, v, meta)}
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>每条新片的 5s 完播 vs 判定线</h2>
+        <p>横轴 = 发布顺序（一菜一发，一条 = 一个变量）</p>
+      </div>
+      <div class="card">
+        ${exp.samples.length ? chartSVG(exp, v) : '<div class="empty-state" style="min-height:180px"><p>还没有样本。录入第一条后，这里会出现柱与判定线。</p></div>'}
+        <div class="legend">
+          <span><i class="bar" style="background:var(--ok)"></i>达标（≥ ${pct(v.thr)}）</span>
+          <span><i class="bar" style="background:var(--bar-miss)"></i>未达标</span>
+          <span><i style="background:var(--accent)"></i>均值</span>
+          <span><i style="background:var(--warnc)"></i>判定线 ${pct(v.thr)}</span>
+          <span><i style="background:var(--meta)"></i>改造前基线 ${(exp.baseline * 100).toFixed(0)}%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>样本（${v.n} / ${v.target}）</h2>
+        <p>每条挂一张内容卡 · 一菜一发</p>
+      </div>
+      <div class="card">
+        <div class="progress ${v.n >= v.target ? (v.level === 'pass' ? 'ok' : 'bad') : ''}">
+          <i style="width:${Math.min(100, v.n / v.target * 100)}%"></i>
+        </div>
+        <div class="progress-meta">
+          <span>${v.n} / ${v.target} 条</span>
+          <span>${v.hits} 条达标 · 需 ${v.needHits} 条</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        ${exp.samples.length ? samplesTable(exp, v) : '<div class="empty-state" style="min-height:150px"><p>样本为空。用下面的表单录入第一条。</p></div>'}
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="section-head" style="margin-bottom:14px">
+          <h2>录入一条新片表现</h2>
+          <p>数据来自抖音后台 · 一菜一发</p>
+        </div>
+        <form id="sample-form" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="s-dish">内容（已发布）</label>
+              <select id="s-dish" name="dish">
+                ${DISHES.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field">
+              <label for="s-date">发布日期</label>
+              <input id="s-date" name="publishedAt" type="date" value="${todayISO()}">
+            </div>
+            <div class="field">
+              <label for="s-ret">5s 完播率（%）</label>
+              <input id="s-ret" name="retention5s" type="number" step="0.1" min="0" max="100" placeholder="例：46.8">
+              <div class="err" data-err="retention5s"></div>
+            </div>
+            <div class="field">
+              <label for="s-bou">2s 跳出率（%）</label>
+              <input id="s-bou" name="bounce2s" type="number" step="0.1" min="0" max="100" placeholder="例：30.2">
+              <div class="hint">越低越好。</div>
+            </div>
+            <div class="field">
+              <label for="s-avg">平均播放时长（秒）</label>
+              <input id="s-avg" name="avgDuration" type="number" step="0.1" min="0" placeholder="例：9.1">
+            </div>
+            <div class="field">
+              <label for="s-dur">视频总时长（秒）</label>
+              <input id="s-dur" name="duration" type="number" step="0.1" min="0" placeholder="例：71.2">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn primary">录入这条</button>
+            <span class="hint" style="color:var(--meta);font-size:12px">只填 5s 完播率也能录入</span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    ${sedimentBlock(exp, v)}
+  `;
+}
+
+/* ------------------------------------------------------------ 判定卡 */
+
+function verdictCard(exp, v, meta) {
+  if (v.level === 'none') {
+    return `
+      <div class="verdict">
+        <div class="verdict-head">
+          <div class="verdict-mark warn">—</div>
+          <div>
+            <h3>还没有样本</h3>
+            <p>录入第一条新片表现后，判定区会开始给信号。</p>
+          </div>
+        </div>
+        <div class="verdict-rule">
+          判定规则：样本满 <code>${v.target}</code> 条 → 均值 ≥ <code>${pct(v.thr)}</code> 且 达标条数 ≥ <code>${v.needHits}</code> 条 → <b>达标</b>；否则 <b>未达标</b>；样本未满 → <b>证据不足</b>。
+        </div>
+      </div>`;
+  }
+
+  if (v.level === 'insufficient') {
+    const need = v.thr - v.mean;
+    return `
+      <div class="verdict">
+        <div class="verdict-head">
+          <div class="verdict-mark warn">⏳</div>
+          <div>
+            <h3>证据不足 — 还差 ${v.gap} 条</h3>
+            <p>样本没攒够，现在下任何结论都是拿运气当规律。</p>
+          </div>
+        </div>
+        <div class="verdict-body">
+          <div class="vrow"><span class="dot">·</span><span>当前均值 <b>${pct(v.mean)}</b>，距阈值还差 <b>${need > 0 ? (need * 100).toFixed(1) + 'pt' : '已超过 ' + (-need * 100).toFixed(1) + 'pt'}</b></span></div>
+          <div class="vrow"><span class="dot">·</span><span>达标条数 <b>${v.hits}</b> / 需要 <b>${v.needHits}</b> 条</span></div>
+          <div class="vrow"><span class="dot">·</span><span>继续连发 <b>${v.gap}</b> 条，保持六拍结构与价格反差字幕不变</span></div>
+        </div>
+        <div class="verdict-rule">
+          判定规则：样本满 <code>${v.target}</code> 条 → 均值 ≥ <code>${pct(v.thr)}</code> 且 达标条数 ≥ <code>${v.needHits}</code> 条 → <b>达标</b>；否则 <b>未达标</b>；样本未满 → <b>证据不足</b>。
+        </div>
+      </div>`;
+  }
+
+  const pass = v.level === 'pass';
+  return `
+    <div class="verdict">
+      <div class="verdict-head">
+        <div class="verdict-mark ${meta.cls}">${meta.mark}</div>
+        <div>
+          <h3>${pass ? '达标 — 假设成立' : '未达标 — 假设不成立'}</h3>
+          <p>${pass
+            ? '六拍结构可以被复制到下一批内容里。'
+            : '六拍结构没把 5s 完播拉起来，别急着扩量。'}</p>
+        </div>
+      </div>
+      <div class="verdict-body">
+        <div class="vrow"><span class="dot">·</span><span>样本 <b>${v.n}</b> 条，均值 <b>${pct(v.mean)}</b>，阈值 <b>${pct(v.thr)}</b> → <b>${v.mean >= v.thr ? '均值达标' : '均值未达标'}</b></span></div>
+        <div class="vrow"><span class="dot">·</span><span>达标条数 <b>${v.hits}</b> / 需要 <b>${v.needHits}</b> 条 → <b>${v.hits >= v.needHits ? '条数达标' : '条数不足'}</b></span></div>
+        <div class="vrow"><span class="dot">·</span><span>较改造前基线 <b>${pt(v.mean - exp.baseline)}</b></span></div>
+        <div class="vrow"><span class="dot">·</span><span>下一步：${pass
+          ? '把六拍结构写进「可复制池」，下一批内容直接套用；再起一个实验测「价格反差字幕单独贡献多少」。'
+          : (v.mean >= v.thr
+            ? '均值已过线，但达标条数不够 —— 说明这批样本里还有「没接住」的个别条，别扩量，先补 2–3 条把条数凑够。'
+            : '保留价格反差字幕做单变量对照，先定位是「六拍结构」还是「选题」没接住。')}</span></div>
+      </div>
+      <div class="verdict-rule">
+        判定规则：样本满 <code>${v.target}</code> 条 → 均值 ≥ <code>${pct(v.thr)}</code> 且 达标条数 ≥ <code>${v.needHits}</code> 条 → <b>达标</b>；否则 <b>未达标</b>；样本未满 → <b>证据不足</b>。
+      </div>
+    </div>`;
+}
+
+/* ------------------------------------------------------------ 样本表 */
+
+function samplesTable(exp, v) {
+  const rows = exp.samples.map((s, i) => {
+    const hit = s.retention5s >= v.thr;
+    return `
+      <tr>
+        <td class="num" style="color:var(--meta)">#${i + 1}</td>
+        <td>${esc(s.dish)}</td>
+        <td class="num">${esc(s.publishedAt || '—')}</td>
+        <td class="r num" style="font-weight:600">${pct(s.retention5s)}</td>
+        <td class="r num">${s.bounce2s == null ? '—' : (s.bounce2s * 100).toFixed(1) + '%'}</td>
+        <td class="r num">${s.avgDuration == null ? '—' : s.avgDuration.toFixed(1) + 's'}</td>
+        <td class="r">${hit ? '<span class="tag-hit">达标</span>' : '<span class="tag-miss">未达标</span>'}</td>
+        <td class="r"><button class="btn tiny" data-remove="${esc(s.id)}" title="移除这条">移除</button></td>
+      </tr>`;
+  }).join('');
+
+  return `
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>#</th><th>内容</th><th>发布日</th>
+            <th class="r">5s 完播</th><th class="r">2s 跳出</th><th class="r">均播</th>
+            <th class="r">判定</th><th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ------------------------------------------------------------ 图表（手绘 SVG） */
+
+function chartSVG(exp, v) {
+  const W = 680, H = 250;
+  const padL = 46, padR = 18, padT = 22, padB = 42;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const s = exp.samples;
+  const thr = exp.threshold * 100;
+  const base = exp.baseline * 100;
+  const vals = s.map(x => x.retention5s * 100);
+  const top = Math.max(60, thr + 8, base + 8, Math.max.apply(null, vals) + 8);
+  const yMax = Math.ceil(top / 10) * 10;
+  const step = yMax > 70 ? 20 : 10;
+
+  const x = i => padL + (i + 0.5) * (plotW / s.length);
+  const y = val => padT + plotH * (1 - val / yMax);
+
+  /* 线标签的「挖空底衬」：均值线可能正好压在某根柱子上，纯文字会看不清。
+     ⚠ 宽度按字符类别估算（CJK ≈ 1em，其余 ≈ 0.58em），不能一律按 0.6em 算，
+       否则中文标签会被算窄、底衬盖不住字。 */
+  const textW = (t, size) => [...t].reduce((a, c) =>
+    a + (/[\u3000-\u9fff\uff00-\uffef]/.test(c) ? size : (c === ' ' ? size * 0.3 : size * 0.58)), 0);
+  const lineLabel = (ax, ty, text, color, size, anchor, weight) => {
+    const w = textW(text, size) + 10;
+    const rx = anchor === 'end' ? ax - w + 2 : ax - 5;
+    return `<rect x="${rx.toFixed(1)}" y="${(ty - size - 1).toFixed(1)}" width="${w.toFixed(1)}"
+      height="${(size + 6).toFixed(1)}" rx="4" fill="var(--surface)"/>` +
+      `<text x="${ax}" y="${ty}" text-anchor="${anchor}" font-size="${size}"
+      font-weight="${weight}" fill="${color}">${text}</text>`;
+  };
+
+  const barW = Math.min(52, (plotW / s.length) * 0.52);
+
+  let out = '';
+
+  // 横向网格 + Y 轴刻度
+  for (let t = 0; t <= yMax; t += step) {
+    const yy = y(t);
+    out += `<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W - padR}" y2="${yy.toFixed(1)}"
+      stroke="var(--border-soft)" stroke-width="1"/>`;
+    out += `<text x="${padL - 10}" y="${(yy + 4).toFixed(1)}" text-anchor="end"
+      font-size="11" fill="var(--meta)" font-family="var(--font-mono)">${t}%</text>`;
+  }
+
+  // 基线
+  out += `<line x1="${padL}" y1="${y(base).toFixed(1)}" x2="${W - padR}" y2="${y(base).toFixed(1)}"
+    stroke="var(--meta)" stroke-width="1" stroke-dasharray="2 4"/>`;
+  out += lineLabel(W - padR, y(base) - 7, '改造前基线 ' + base.toFixed(0) + '%', 'var(--meta)', 10.5, 'end', 400);
+
+  // 判定线
+  out += `<line x1="${padL}" y1="${y(thr).toFixed(1)}" x2="${W - padR}" y2="${y(thr).toFixed(1)}"
+    stroke="var(--warnc)" stroke-width="1.6" stroke-dasharray="7 5"/>`;
+  out += lineLabel(padL + 4, y(thr) - 8, '判定线 ' + thr.toFixed(0) + '%', 'var(--warnc)', 11, 'start', 600);
+
+  // 柱
+  s.forEach((item, i) => {
+    const val = item.retention5s * 100;
+    const hit = item.retention5s >= exp.threshold;
+    const bx = x(i) - barW / 2;
+    const by = y(val);
+    const bh = Math.max(2, y(0) - by);
+    out += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}"
+      height="${bh.toFixed(1)}" rx="6"
+      fill="${hit ? 'var(--ok)' : 'var(--bar-miss)'}"/>`;
+    out += `<text x="${x(i).toFixed(1)}" y="${(by - 8).toFixed(1)}" text-anchor="middle"
+      font-size="11.5" font-weight="700" fill="${hit ? 'var(--ok)' : 'var(--fg-2)'}"
+      font-family="var(--font-mono)">${val.toFixed(1)}%</text>`;
+    // X 轴标签
+    const label = item.dish.length > 6 ? item.dish.slice(0, 6) + '…' : item.dish;
+    out += `<text x="${x(i).toFixed(1)}" y="${H - 22}" text-anchor="middle"
+      font-size="10.5" fill="var(--meta)">${esc(label)}</text>`;
+    out += `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle"
+      font-size="9.5" fill="var(--meta)" font-family="var(--font-mono)">#${i + 1}</text>`;
+  });
+
+  // 均值线
+  const meanVal = v.mean * 100;
+  out += `<line x1="${padL}" y1="${y(meanVal).toFixed(1)}" x2="${W - padR}" y2="${y(meanVal).toFixed(1)}"
+    stroke="var(--accent)" stroke-width="2"/>`;
+  out += lineLabel(W - padR, y(meanVal) - 7, '均值 ' + meanVal.toFixed(1) + '%', 'var(--accent)', 11, 'end', 700);
+
+  // 目标样本量占位（虚线框，提示还差几条）
+  if (s.length < exp.target) {
+    for (let i = s.length; i < exp.target; i++) {
+      const bx = x(i) - barW / 2;
+      out += `<rect x="${bx.toFixed(1)}" y="${(padT + plotH * 0.62).toFixed(1)}"
+        width="${barW.toFixed(1)}" height="${(plotH * 0.38).toFixed(1)}" rx="6"
+        fill="none" stroke="var(--border-soft)" stroke-width="1.4" stroke-dasharray="4 4"/>`;
+      out += `<text x="${x(i).toFixed(1)}" y="${(padT + plotH * 0.82).toFixed(1)}" text-anchor="middle"
+        font-size="10" fill="var(--meta)">待录入</text>`;
+      out += `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle"
+        font-size="9.5" fill="var(--meta)" font-family="var(--font-mono)">#${i + 1}</text>`;
+    }
+  }
+
+  return `<div class="chart-wrap">
+    <svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="每条新片的 5s 完播率与判定线对比图">
+      ${out}
+    </svg>
+  </div>`;
+}
+
+/* ------------------------------------------------------------ 沉淀块 */
+
+function sedimentBlock(exp, v) {
+  if (v.level === 'none' || v.level === 'insufficient') {
+    return `
+      <div class="section">
+        <div class="section-head">
+          <h2>沉淀结论</h2>
+          <p>样本攒满、判定出结果后才能沉淀</p>
+        </div>
+        <div class="card">
+          <div class="empty-state" style="min-height:120px">
+            <p>还差 ${v.gap} 条。判定出来之前，任何「经验」都只是印象。</p>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  if (exp.sedimented) {
+    const pass = v.level === 'pass';
+    return `
+      <div class="section">
+        <div class="section-head">
+          <h2>沉淀结论</h2>
+          <p>已写入知识资产</p>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <span class="pill ok">✓ 已沉淀为知识资产草稿</span>
+            <span style="color:var(--meta);font-size:12px">知识资产 › 实验结论</span>
+          </div>
+          <pre style="margin:0;white-space:pre-wrap;font-family:var(--font-body);font-size:13px;line-height:1.85;color:var(--fg-2);background:var(--input);border:1px solid var(--border-soft);border-radius:7px;padding:16px">${esc(assetDraft(exp, v, pass))}</pre>
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="section">
+      <div class="section-head">
+        <h2>沉淀结论</h2>
+        <p>把这次实验变成下次能直接用的资产</p>
+      </div>
+      <div class="card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px">
+          <div style="font-size:13.5px;font-weight:600;margin-bottom:4px">这次实验已经有结论了</div>
+          <div style="color:var(--muted);font-size:12.5px">沉淀后会写进「知识资产 › 实验结论」，下次开新实验时可以直接引用。</div>
+        </div>
+        <button class="btn primary" data-act="sediment">沉淀为知识资产</button>
+      </div>
+    </div>`;
+}
+
+function assetDraft(exp, v, pass) {
+  return [
+    '## 实验结论 · ' + exp.title,
+    '',
+    '判定：' + (pass ? '达标 — 假设成立' : '未达标 — 假设不成立'),
+    '假设：' + exp.hypothesis,
+    '',
+    '证据',
+    '· 样本 ' + v.n + ' 条（目标 ' + v.target + ' 条）',
+    '· 均值 ' + pct(v.mean) + '，阈值 ' + pct(v.thr) + '，改造前基线 ' + pct(exp.baseline),
+    '· 达标条数 ' + v.hits + ' / 需要 ' + v.needHits + ' 条',
+    '',
+    '下一步',
+    '· ' + (pass
+      ? '把六拍结构写进可复制池，下一批直接套用；再起实验测价格反差字幕的单独贡献。'
+      : '保留价格反差字幕做单变量对照，先定位是六拍结构还是选题没接住。')
+  ].join('\n');
+}
+
+/* ============================================================================
+   事件绑定
+   ============================================================================ */
+
+function todayISO() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+/* 导航 */
+$('#nav').addEventListener('click', e => {
+  const a = e.target.closest('a[data-route]');
+  if (!a) return;
+  e.preventDefault();
+  const route = a.dataset.route;
+  document.querySelectorAll('#nav a').forEach(x => x.classList.toggle('active', x === a));
+  if (route === 'validation') {
+    view = store.experiment ? 'experiment' : 'empty';
+  } else {
+    view = 'other';
+  }
+  render();
+  $('#app').focus();
+});
+
+/* 主题 */
+document.querySelectorAll('.theme-options button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.themeValue;
+    document.documentElement.dataset.theme = t;
+    render();
+  });
+});
+
+/* 应用区事件委托 */
+$('#app').addEventListener('click', e => {
+  const actEl = e.target.closest('[data-act]');
+  if (actEl) {
+    const act = actEl.dataset.act;
+    if (act === 'new') { view = 'new'; render(); window.scrollTo({ top: 0 }); return; }
+    if (act === 'cancel-new') { view = store.experiment ? 'experiment' : 'empty'; render(); return; }
+    if (act === 'demo') { loadDemo(); return; }
+    if (act === 'reset') { resetAll(); return; }
+    if (act === 'sediment') { sediment(); return; }
+    if (act === 'back-validation') {
+      view = store.experiment ? 'experiment' : 'empty';
+      document.querySelectorAll('#nav a').forEach(x =>
+        x.classList.toggle('active', x.dataset.route === 'validation'));
+      render();
+      return;
+    }
+  }
+
+  const rm = e.target.closest('[data-remove]');
+  if (rm) { removeSample(rm.dataset.remove); }
+});
+
+/* 表单提交 */
+$('#app').addEventListener('submit', e => {
+  e.preventDefault();
+
+  if (e.target.id === 'exp-form') {
+    const fd = new FormData(e.target);
+    const title = (fd.get('title') || '').trim();
+    const hypothesis = (fd.get('hypothesis') || '').trim();
+    const threshold = Number(fd.get('threshold'));
+    const target = Number(fd.get('target'));
+    const baseline = Number(fd.get('baseline')) / 100;
+
+    const errs = {};
+    if (!title) errs.title = '给实验起个名字，方便以后翻出来';
+    if (hypothesis.length < 10) errs.hypothesis = '至少 10 个字，写成一句能被证伪的话';
+    if (!(threshold > 0 && threshold <= 100)) errs.threshold = '阈值需在 1–100 之间';
+    if (!(target >= 1 && target <= 30)) errs.target = '样本量需在 1–30 之间';
+
+    e.target.querySelectorAll('[data-err]').forEach(el => {
+      el.textContent = errs[el.dataset.err] || '';
+    });
+    if (Object.keys(errs).length) return;
+
+    createExperiment({
+      title,
+      hypothesis,
+      metric: fd.get('metric') || '5s完播率',
+      threshold: threshold / 100,
+      target,
+      baseline: isNaN(baseline) ? 0.27 : baseline,
+      secondary: (fd.get('secondary') || '').trim()
+    });
+    return;
+  }
+
+  if (e.target.id === 'sample-form') {
+    const fd = new FormData(e.target);
+    const raw = fd.get('retention5s');
+    const errEl = e.target.querySelector('[data-err="retention5s"]');
+    const num = raw === '' || raw == null ? NaN : Number(raw);
+
+    if (isNaN(num) || num < 0 || num > 100) {
+      if (errEl) errEl.textContent = '5s 完播率必填，取值 0–100';
+      return;
+    }
+    if (errEl) errEl.textContent = '';
+
+    const opt = (name) => {
+      const v = fd.get(name);
+      if (v === '' || v == null) return null;
+      const n = Number(v);
+      return isNaN(n) ? null : n;
+    };
+
+    addSample({
+      dish: fd.get('dish'),
+      publishedAt: fd.get('publishedAt') || todayISO(),
+      retention5s: num / 100,
+      bounce2s: opt('bounce2s') == null ? null : opt('bounce2s') / 100,
+      avgDuration: opt('avgDuration'),
+      duration: opt('duration')
+    });
+  }
+});
+
+/* 启动 */
+render();
+</script>
+</body>
+</html>

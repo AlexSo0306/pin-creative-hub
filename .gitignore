@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+Thumbs.db
+
+# 日志与临时文件
+*.log
+/tmp/
+
+# 死代码备份包（保留在本地，不进版本库）
+mascot-死代码备份-*.tar.gz
