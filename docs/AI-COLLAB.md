@@ -47,6 +47,62 @@ B 建分支 → 改前端 → 自查 → 更新日志 → push
 
 ---
 
+### 2026-09-28 18:25 · 机器B · ✅ 锅宝已部署到 NAS（飞牛 FNNas）并线上验收通过
+
+**结论：已上线。** `http://192.168.124.77:4174/` 现在跑的就是 `main@0e7abb8`。
+
+**部署目标（重要，之前一直搞不清）**
+- 部署机 = **`192.168.124.77`**，设备名 **`FNNas`**（飞牛 fnOS，Linux 6.18.18）。
+- **SSH 不在 22，在 8090**：`ssh -p 8090 admin@192.168.124.77`。已授权本机公钥（免密）。
+  `admin` 属于 **`docker` 组** → **免 sudo 直接跑 docker**。
+- 目录：`/vol1/1000/Docker/Workbench`。**它不是 git 仓库**（`fatal: not a git repository`），
+  历史部署方式是**打 tar 包上传解压**（现场还留着 `workbench-deploy.tar.gz`）。
+- ⚠️ `.88`（`ds220`，Synology）**与本项目无关**：虽能 SSH、也有 docker，但本机无 4174 服务、
+  无 Workbench 容器、无 `/vol1`。别再去那台找。
+
+**部署前实测的影响半径（这次只动前端）**
+- `public/index.html`、`public/css/app.css` **内容不同**；仓库多出 **21 个**锅宝相关文件；NAS 无多余文件。
+- **`src/` 全部 + `server.js` + `package.json` + `Dockerfile` + `docker-compose.yml` 的 md5 完全一致**
+  —— 因为 `src/` 最后一次改动是 **2026-08-07**，9 月以来的工作全是前端。
+- → 所以这不是「落后 7 周的大升级」，而是**纯前端增量**。
+
+**部署步骤（可复用）**
+1. **备份**（可回滚）：`tar czf /vol1/1000/Docker/Workbench-backups/pre-mascot-$(date +%Y%m%d-%H%M%S).tar.gz public src server.js package.json package-lock.json Dockerfile docker-compose.yml .dockerignore .gitignore`
+   → 已生成 `pre-mascot-20260928-182352.tar.gz`（142 KB）。**`data/` 全程不碰**（`workbench.db` 是生产数据）。
+2. **rsync 传代码**（`--files-from` + 显式 `-r`，见下方坑）→ 实际只传 **23 个文件**，与 md5 分析完全吻合。
+3. **重建**：`cd /vol1/1000/Docker/Workbench && docker compose up -d --build`
+   → **只用了 4 秒**。`FROM` / `COPY package*.json` / `RUN npm ci` 三层全部 `CACHED`（`package*.json` 未变），
+   只有 `COPY . .` 重跑。**不用 `down`**，`up -d --build` 会自己 recreate，停服只有几秒。
+4. **验收**：见下。
+
+**踩过的坑（可复用）**
+- ⚠️ **`rsync --files-from` 会让 `-a` 里的 `-r` 失效**！实测：不加 `-r` 时只列了 8 个顶层项、
+  完全没递归进 `public/`，`Transfer starting: 8 files` —— 看起来"成功"，实际**一个文件都没传进去**。
+  → 必须写 `rsync -rlptDv --checksum --files-from=...`（显式 `-r`）。用 `-rlptD` 而非 `-a` 是为了
+  避开 `-a` 隐含的 `-o -g`（改 owner 需要 root，会报错）。
+- ⚠️ **`docker-compose.yml` 用的是 `build: .`，只有 `./data` 是挂载的** → 代码**烤进镜像**。
+  所以「文件传完了」≠「生效了」，**必须重建镜像**。这也是为什么传文件阶段对线上零影响、可以放心做。
+- ⚠️ **别用 `--delete`**：先做 md5 清单比对确认「NAS 没有多余文件」，再决定。本次 0 个多余文件。
+
+**线上验收（对比法，不是"命令没报错"）**
+- 容器 `Up (healthy)`，日志 `拼好家运营创作中心已启动：http://localhost:4174`。
+- `index.html` **2185B → 3463B**；`guobao.js` 从 **2185B（index.html 兜底）→ 19610B（真文件）**；
+  `engine.js` 43166B；`mascot.css` 8158B。→ 之前访问这三个路径全是 index.html 兜底，**证明 NAS 上根本没有这些文件**。
+- 服务端取回的文件 md5 与仓库**逐字节一致**（`guobao.js` `3007a303…`、`index.html` `61fba72c…`、`engine.js` `4008b676…`）。
+- ⭐ **把 `verify-guobao.mjs` 指向 NAS 跑**：`node verify-guobao.mjs http://192.168.124.77:4174/`
+  → **37 通过 / 0 失败**。含正圆 bbox 232×231、实心占比 0.750、单一色 `0,153,255`、
+  白竖眼 21×47（高/宽 2.24）、睡眠横条 49×15、32 表情、6 条路由映射、无页面报错。
+  → **这是唯一能证明"线上真的渲染对了"的验收方式**，光看文件大小是不够的。
+
+**下一步（供对侧接续）**
+- 回滚方式：`cd /vol1/1000/Docker/Workbench && tar xzf /vol1/1000/Docker/Workbench-backups/pre-mascot-20260928-182352.tar.gz && docker compose up -d --build`
+- 待办：`public/js/components/mascot.js` + `public/js/components/mascot/`（旧自建引擎，6 个模块）
+  已随本次部署上到 NAS，但 `index.html` **不引用它们** → 是死代码。可择机删除。
+- 待办：`AGENTS.md` 仍描述旧引擎（`--gb-scheme / --gb-bg / --gb-eye`），应更新为 mood-mates。
+- 待办（安全）：那个 PAT 已从 `.git/config` 明文改为 macOS Keychain，但**本身应视为已泄露，建议吊销换新**。
+
+---
+
 ### 2026-09-28 18:16 · 机器B · 锅宝眼形语汇 1:1 复刻收尾 + `feature/fe-mascot-widget` 合入 main + 明文 token 出仓
 
 **做了什么**
@@ -77,7 +133,8 @@ B 建分支 → 改前端 → 自查 → 更新日志 → push
   `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy git -c http.proxy=http://127.0.0.1:7890 push origin main`
 
 **下一步（供对侧接续）**
-- ⚠️ **NAS 尚未部署**。实测：NAS `192.168.124.77:4174` 跑的还是合并前的 `main`(41023fe)
+- ~~⚠️ **NAS 尚未部署**~~ → **已于 18:25 部署完成，见上一条**。以下为部署前的实测记录（留作证据）：
+  当时 NAS `192.168.124.77:4174` 跑的还是合并前的 `main`(41023fe)
   —— index 2185B、`v0.1.0`、静态侧栏、**无锅宝**；`/js/components/guobao.js`、
   `/js/vendor/mood-mates/core/engine.js`、`/css/mascot.css` 全部返回 index.html 兜底
   （说明这些文件在 NAS 上**不存在**）。
