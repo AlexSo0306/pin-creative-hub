@@ -47,6 +47,50 @@ B 建分支 → 改前端 → 自查 → 更新日志 → push
 
 ---
 
+### 2026-09-28 18:16 · 机器B · 锅宝眼形语汇 1:1 复刻收尾 + `feature/fe-mascot-widget` 合入 main + 明文 token 出仓
+
+**做了什么**
+- `feature/fe-mascot-widget` 以 **fast-forward** 合入 `main`（12 个提交，`41023fe` → `5844c91`），已推远端。
+  `main` 现含 mood-mates 引擎 + 锅宝（14 个相关文件），`public/index.html` 2185B → 3463B。
+- 眼形语汇按原版实测定稿：原版**只有 3 个真横条**（idx 4/13/22，长/短 3.6~4.1），
+  且**只用于** sleeping / drowsy / bored / sad；它的 searching 用的是**近圆**（1.03~1.09）。
+  → 结论：**横条形状 = 闭眼语义**，扫读类情绪绝不能用横条。
+- 修掉「横条外溢」：`scan/scan2/scan3` 曾被我改成粗横条，导致池子里带 scan 的
+  **19 满意 / 39 输出回复 / 40 检索资料 / 03 好奇 / 30 思考中** 全变成「闭眼」。
+  已回退为上游原值；`40 检索资料` 的 pool 改为 `['wide','wide2','scan2']`。
+- 7 组眼形与原版按 PCA 主轴比对，差异 **≤1%**（按身体直径归一）。
+- 安全：`.git/config` 里**明文写着的 GitHub PAT 已摘除**，改用 macOS Keychain
+  （`credential.helper=osxkeychain`，全局）。`ls-remote` / `push --dry-run` 走 Keychain 均已实测通过。
+
+**踩过的坑（可复用）**
+- ⚠️ **体检脚本自己手抄了一份被检数据** → 真实文件 `guobao.js` 已是 `SyntaxError`、
+  浏览器什么都没加载，脚本仍报「22 个槽位全绿」。已改为**直接加载真实文件**并硬 gate（失败 `exit 3`）。
+- ⚠️ **补丁打在「创建时」会被「每帧重算」覆盖**：地面投影 `opacity` 在创建处设 0，
+  每帧 `shOp = 0.16*(1-0.55*lift)` 又写回去 → 补丁等于没生效。
+  识别特征：运行时属性值是 `"0.160"`（三位小数 = `toFixed(3)` 的签名），不是 `'0'`。
+- ⚠️ **外观契约（扁平/纯色/正圆/无高光）不能用 DOM 属性验**：引擎故意保留 `<radialGradient>`，
+  只把 4 个 stop 设成同色 → `fill` 读出来仍是 `url(#…)`。必须**栅格化后数像素**。
+- ⚠️ **macOS BSD grep 不认 BRE 的 `\|`**：`grep -c "a\|b"` 恒为 0，会误判成「合并失败」。用 `grep -E "a|b"`。
+
+**环境事实（可复用）**
+- 推送必须走代理 `127.0.0.1:7890`；会话里的 `HTTP_PROXY=127.0.0.1:60630` 会返回 **502**。
+  `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy git -c http.proxy=http://127.0.0.1:7890 push origin main`
+
+**下一步（供对侧接续）**
+- ⚠️ **NAS 尚未部署**。实测：NAS `192.168.124.77:4174` 跑的还是合并前的 `main`(41023fe)
+  —— index 2185B、`v0.1.0`、静态侧栏、**无锅宝**；`/js/components/guobao.js`、
+  `/js/vendor/mood-mates/core/engine.js`、`/css/mascot.css` 全部返回 index.html 兜底
+  （说明这些文件在 NAS 上**不存在**）。
+- 部署方式：`deploy.sh` 操作 NAS 内部路径 `/vol1/1000/Docker/Workbench`，**必须在 NAS 本机执行**
+  （`docker compose down` → `up -d --build` → 健康检查 `http://127.0.0.1:4174/api/health`）。
+  本机无法远程执行：`.77` 的 **22 端口拒绝**，也没挂载它的共享。
+- `.88`（`ds220`，Synology）SSH 可进但与本项目无关（无 docker / 无 `/vol1` / 无 Workbench）。
+- 待办：`AGENTS.md` 仍在描述**旧引擎**（`public/js/components/mascot*`、`--gb-scheme/--gb-bg/--gb-eye`），
+  应更新为 mood-mates 引擎。
+- 待办（安全）：那个 PAT 已从明文改为 Keychain，但它**本身可能已泄露**，建议吊销并换新。
+
+---
+
 ### 2026-09-24 02:35 · 机器B · 修一个「套件全绿但肉眼能看见」的缺陷：特效粒子渲染成黑色
 
 **怎么发现的**：换引擎后套件 25/25 全绿，但**把截图打开看**，`33 任务完成` 的
