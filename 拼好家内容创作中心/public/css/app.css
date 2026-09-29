@@ -21,6 +21,16 @@
   --font-display: "GT Walsheim", "Inter", "Segoe UI", sans-serif;
   --font-body: "Inter", "Segoe UI", sans-serif;
   --font-mono: "Azeret Mono", "SFMono-Regular", Consolas, monospace;
+  /* 字号 7 档（2026-09-28 收敛，规范 §1.4 同步）：全站 font-size 只允许引用以下令牌 */
+  --text-2xs: 11px;  /* 辅助文字 / 标签 / 图注（全站最小字号） */
+  --text-xs: 12px;   /* 表格正文 / 次要信息 */
+  --text-sm: 13px;   /* 正文 */
+  --text-md: 15px;   /* 卡片标题 / 强调正文 */
+  --text-lg: 18px;   /* 区块标题（恒为 h2） */
+  --text-xl: 22px;   /* 页面副标 / 抽屉标题 */
+  --text-num: 31px;  /* 指标大数字 */
+  --text-hero: 45px; /* 首屏英雄数字（每屏至多 1 处） */
+  --text-display: clamp(34px, 4vw, 52px); /* 页面大标题（h1，全站唯一） */
 }
 
 :root[data-theme="fluent"] {
@@ -59,7 +69,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: var(--text-sm);
   line-height: 1.5;
 }
 
@@ -135,7 +145,7 @@ a {
   background: #fff;
   border-radius: 7px;
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 800;
 }
 
@@ -151,12 +161,12 @@ a {
 
 .brand strong {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .brand small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .main-nav {
@@ -204,7 +214,7 @@ a {
   place-items: center;
   flex: 0 0 auto;
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--text-md);
 }
 
 .sidebar-spacer {
@@ -218,7 +228,7 @@ a {
   padding: 12px 10px;
   color: var(--muted);
   border-top: 1px solid var(--border-soft);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .theme-options {
@@ -253,7 +263,7 @@ a {
   color: var(--muted);
   border-top: 1px solid var(--border-soft);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .status-dot {
@@ -289,7 +299,7 @@ a {
   margin: 0 0 12px;
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -309,24 +319,24 @@ h3 {
 
 h1 {
   margin-bottom: 12px;
-  font-size: clamp(34px, 4vw, 52px);
+  font-size: var(--text-display);
   line-height: 1;
 }
 
 h2 {
   margin-bottom: 0;
-  font-size: 22px;
+  font-size: var(--text-xl);
 }
 
 h3 {
-  font-size: 16px;
+  font-size: var(--text-md);
 }
 
 .lead {
   max-width: 660px;
   margin-bottom: 0;
   color: var(--fg-2);
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .button {
@@ -403,32 +413,37 @@ h3 {
 .summary-grid p {
   margin-bottom: 24px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .summary-grid strong {
   display: block;
   margin-bottom: 13px;
   font-family: var(--font-mono);
-  font-size: 35px;
+  font-size: var(--text-num);
   line-height: 1;
 }
 
 .summary-grid strong small {
   color: var(--muted);
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
 }
 
 .summary-grid span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .summary-primary {
   background: var(--accent);
   color: #fff;
+}
+
+.summary-primary.empty {
+  background: transparent;
+  color: var(--fg);
 }
 
 .summary-primary p,
@@ -529,7 +544,7 @@ a:focus-visible {
   margin: 20px 0 12px;
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .account-grid {
@@ -594,7 +609,7 @@ a:focus-visible {
 
 .account-identity strong {
   overflow: hidden;
-  font-size: 16px;
+  font-size: var(--text-md);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -603,7 +618,7 @@ a:focus-visible {
   margin-top: 2px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -616,7 +631,7 @@ a:focus-visible {
   border: 1px solid var(--border-soft);
   border-radius: 999px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .status-pill.active {
@@ -631,7 +646,7 @@ a:focus-visible {
   min-height: 58px;
   margin: 24px 0 17px;
   color: var(--fg-2);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .platform-list {
@@ -653,13 +668,13 @@ a:focus-visible {
 }
 
 .platform-row b {
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .platform-row span {
   overflow: hidden;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -684,7 +699,7 @@ a:focus-visible {
   padding-top: 17px;
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .account-card-foot b {
@@ -707,7 +722,7 @@ a:focus-visible {
 .empty-state strong {
   margin-bottom: 6px;
   color: var(--fg);
-  font-size: 16px;
+  font-size: var(--text-md);
 }
 
 .empty-state p {
@@ -748,7 +763,7 @@ a:focus-visible {
 }
 
 .drawer-header h2 {
-  font-size: 27px;
+  font-size: var(--text-xl);
 }
 
 .icon-button {
@@ -761,7 +776,7 @@ a:focus-visible {
   background: var(--hover);
   border: 1px solid var(--border-soft);
   border-radius: 50%;
-  font-size: 23px;
+  font-size: var(--text-xl);
 }
 
 #accountForm {
@@ -805,7 +820,7 @@ a:focus-visible {
 .platform-editor label > span,
 .color-field > span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .field-wide {
@@ -815,7 +830,7 @@ a:focus-visible {
 .field-error {
   min-height: 16px;
   color: var(--danger);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .color-field {
@@ -952,13 +967,13 @@ a:focus-visible {
 .placeholder-index {
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 32px;
+  font-size: var(--text-num);
 }
 
 .placeholder-band strong {
   display: block;
   margin-bottom: 5px;
-  font-size: 18px;
+  font-size: var(--text-lg);
 }
 
 .placeholder-band p {
@@ -1018,7 +1033,7 @@ a:focus-visible {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .account-plan-filters button:hover,
@@ -1054,7 +1069,7 @@ a:focus-visible {
   padding: 18px 2px 10px;
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .content-board {
@@ -1065,6 +1080,7 @@ a:focus-visible {
   gap: 8px;
   min-height: 560px;
   overflow-x: auto;
+  scroll-snap-type: x proximity;
 }
 
 .plan-column {
@@ -1073,6 +1089,7 @@ a:focus-visible {
   background: color-mix(in srgb, var(--surface), transparent 18%);
   border: 1px solid var(--border-soft);
   border-radius: 8px;
+  scroll-snap-align: start;
   transition: border-color 140ms ease, background 140ms ease;
 }
 
@@ -1091,13 +1108,13 @@ a:focus-visible {
 }
 
 .plan-column > header h2 {
-  font-size: 15px;
+  font-size: var(--text-lg);
 }
 
 .plan-column > header p {
   margin: 3px 0 0;
   color: var(--meta);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .plan-column > header > span {
@@ -1110,7 +1127,7 @@ a:focus-visible {
   border: 1px solid var(--border-soft);
   border-radius: 50%;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .plan-card-list {
@@ -1129,7 +1146,7 @@ a:focus-visible {
   text-align: center;
   border: 1px dashed var(--border-soft);
   border-radius: 7px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .plan-card {
@@ -1169,7 +1186,7 @@ a:focus-visible {
   gap: 7px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1187,7 +1204,7 @@ a:focus-visible {
   margin: 11px 0 5px;
   color: var(--fg);
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: var(--text-sm);
   line-height: 1.35;
 }
 
@@ -1195,7 +1212,7 @@ a:focus-visible {
   display: block;
   overflow: hidden;
   color: var(--meta);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1221,7 +1238,7 @@ a:focus-visible {
   background: var(--hover);
   border: 1px solid var(--border-soft);
   border-radius: 4px;
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .document-flags .empty {
@@ -1237,7 +1254,7 @@ a:focus-visible {
   min-height: 31px;
   padding: 4px 7px;
   color: var(--fg-2);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .plan-card footer {
@@ -1248,11 +1265,53 @@ a:focus-visible {
   color: var(--meta);
   border-top: 1px solid var(--border-soft);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .plan-card footer a {
   color: var(--accent);
+}
+
+.plan-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-card-advance {
+  padding: 1px 8px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 55%);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.plan-card-advance:hover {
+  background: color-mix(in srgb, var(--accent), transparent 88%);
+}
+
+.board-viewport {
+  position: relative;
+}
+
+.board-viewport::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--bg));
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.board-viewport.can-scroll-more::after {
+  opacity: 1;
 }
 
 .compact-drawer-layer {
@@ -1276,7 +1335,7 @@ a:focus-visible {
 .content-detail-drawer .drawer-header h2 {
   max-width: 620px;
   overflow: hidden;
-  font-size: 23px;
+  font-size: var(--text-xl);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1294,7 +1353,7 @@ a:focus-visible {
   cursor: pointer;
   color: var(--muted);
   background: transparent;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .detail-tabs button.on {
@@ -1344,12 +1403,12 @@ a:focus-visible {
 
 .account-banner small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .account-banner strong {
   margin-top: 1px;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .card-timestamps {
@@ -1407,14 +1466,14 @@ a:focus-visible {
 .document-view-toolbar > span {
   margin-top: 3px;
   color: var(--meta);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .document-editor textarea {
   min-height: calc(100vh - 310px);
   resize: none;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.7;
 }
 
@@ -1448,12 +1507,12 @@ a:focus-visible {
 .document-empty > span {
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .document-empty strong {
   margin-top: 12px;
-  font-size: 19px;
+  font-size: var(--text-lg);
 }
 
 .document-empty p {
@@ -1464,7 +1523,7 @@ a:focus-visible {
 
 .markdown-body {
   color: var(--fg-2);
-  font-size: 14px;
+  font-size: var(--text-sm);
   line-height: 1.75;
 }
 
@@ -1477,17 +1536,17 @@ a:focus-visible {
 }
 
 .markdown-body h1 {
-  font-size: 25px;
+  font-size: var(--text-xl);
 }
 
 .markdown-body h2 {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-soft);
-  font-size: 19px;
+  font-size: var(--text-lg);
 }
 
 .markdown-body h3 {
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .markdown-body p,
@@ -1560,7 +1619,7 @@ a:focus-visible {
 .publish-record-intro p {
   margin: 3px 0 7px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .publish-record {
@@ -1587,7 +1646,7 @@ a:focus-visible {
 
 .publish-record label > span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .publish-record .field-wide {
@@ -1740,7 +1799,7 @@ a:focus-visible {
   }
 
   .main-nav a {
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .main-nav a:nth-child(-n+4) {
@@ -1753,10 +1812,6 @@ a:focus-visible {
 
   .content-plan-page {
     padding-inline: 14px;
-  }
-
-  h1 {
-    font-size: 36px;
   }
 
   .page-header .button {
@@ -1817,7 +1872,7 @@ a:focus-visible {
 
   .content-detail-drawer .drawer-header h2 {
     max-width: 250px;
-    font-size: 19px;
+    font-size: var(--text-lg);
   }
 
   .detail-tabs {
@@ -1825,7 +1880,7 @@ a:focus-visible {
   }
 
   .detail-tabs button {
-    font-size: 11px;
+    font-size: var(--text-2xs);
   }
 
   .publish-record,
@@ -1912,7 +1967,7 @@ a:focus-visible {
   cursor: pointer;
   color: var(--muted);
   background: transparent;
-  font-size: 23px;
+  font-size: var(--text-xl);
 }
 
 .period-stepper button:hover:not(:disabled) {
@@ -1928,7 +1983,7 @@ a:focus-visible {
 .period-stepper strong {
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .review-metrics {
@@ -1956,14 +2011,14 @@ a:focus-visible {
 .review-metric > span,
 .review-metric small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .review-metric strong {
   margin: auto 0 9px;
   overflow: hidden;
   font-family: var(--font-mono);
-  font-size: 28px;
+  font-size: var(--text-num);
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2009,6 +2064,11 @@ a:focus-visible {
   margin-bottom: 6px;
 }
 
+.review-section-heading h2,
+.knowledge-section-head h2 {
+  font-size: var(--text-lg);
+}
+
 .review-section-heading h2 span {
   display: inline-grid;
   min-width: 24px;
@@ -2021,13 +2081,13 @@ a:focus-visible {
   border: 1px solid var(--border-soft);
   border-radius: 50%;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .review-section-heading > span {
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .pending-review-list {
@@ -2065,7 +2125,7 @@ a:focus-visible {
 .pending-review-row > span {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .pending-review-row > span.stale {
@@ -2076,7 +2136,7 @@ a:focus-visible {
   min-height: 34px;
   padding: 0 12px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .review-insights {
@@ -2125,13 +2185,13 @@ a:focus-visible {
 .review-anomaly-row small {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .review-rank-row b,
 .review-anomaly-row b {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .review-anomaly-row {
@@ -2146,7 +2206,7 @@ a:focus-visible {
   padding: 0 8px;
   border: 1px solid currentColor;
   border-radius: 5px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
 }
 
@@ -2177,7 +2237,7 @@ a:focus-visible {
   text-align: right;
   border-bottom: 1px solid var(--border-soft);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   white-space: nowrap;
 }
 
@@ -2272,7 +2332,7 @@ a:focus-visible {
 
 .conclusion-grid label > span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .conclusion-grid textarea {
@@ -2297,7 +2357,7 @@ a:focus-visible {
 
 .review-conclusion form > footer > span {
   color: var(--meta);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .review-entry-layer {
@@ -2311,7 +2371,7 @@ a:focus-visible {
 .review-entry-drawer .drawer-header h2 {
   max-width: 610px;
   overflow: hidden;
-  font-size: 24px;
+  font-size: var(--text-xl);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2322,7 +2382,7 @@ a:focus-visible {
   gap: 7px;
   margin-top: 8px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .entry-account i {
@@ -2341,7 +2401,7 @@ a:focus-visible {
 .entry-help {
   margin: 24px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .performance-platforms {
@@ -2372,7 +2432,7 @@ a:focus-visible {
 .performance-platform-head > span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .platform-enable {
@@ -2402,7 +2462,7 @@ a:focus-visible {
 
 .performance-entry-grid label > span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .performance-entry-grid input {
@@ -2500,7 +2560,7 @@ a:focus-visible {
   }
 
   .review-metric strong {
-    font-size: 23px;
+    font-size: var(--text-xl);
   }
 
   .review-section-heading {
@@ -2564,7 +2624,7 @@ a:focus-visible {
 
   .review-entry-drawer .drawer-header h2 {
     max-width: calc(100vw - 100px);
-    font-size: 20px;
+    font-size: var(--text-lg);
   }
 }
 
@@ -2585,7 +2645,6 @@ a:focus-visible {
 
 .dashboard-header h1 {
   margin-bottom: 9px;
-  font-size: 42px;
 }
 
 .dashboard-header p:last-child {
@@ -2600,7 +2659,7 @@ a:focus-visible {
   gap: 3px 8px;
   padding-bottom: 4px;
   color: var(--fg-2);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-header-status i {
@@ -2641,14 +2700,14 @@ a:focus-visible {
 .dashboard-metric > span,
 .dashboard-metric small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-metric strong {
   margin: auto 0 10px;
   overflow: hidden;
   font-family: var(--font-mono);
-  font-size: 31px;
+  font-size: var(--text-num);
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2696,18 +2755,18 @@ a:focus-visible {
 
 .dashboard-panel-head .eyebrow {
   margin-bottom: 5px;
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-panel-head h2 {
-  font-size: 18px;
+  font-size: var(--text-lg);
 }
 
 .dashboard-text-link,
 .dashboard-panel-meta {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-text-link:hover {
@@ -2727,7 +2786,7 @@ a:focus-visible {
 
 .week-total strong {
   font-family: var(--font-display);
-  font-size: 45px;
+  font-size: var(--text-hero);
   line-height: 1;
 }
 
@@ -2739,7 +2798,7 @@ a:focus-visible {
 .week-total b {
   margin-left: auto;
   color: var(--accent);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
 }
 
@@ -2784,7 +2843,7 @@ a:focus-visible {
 .week-bars small {
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   text-align: center;
 }
 
@@ -2795,7 +2854,7 @@ a:focus-visible {
   margin: 13px 18px 0;
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .week-foot .warn {
@@ -2831,7 +2890,7 @@ a:focus-visible {
 .performance-rank {
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-performance-row > i,
@@ -2863,7 +2922,7 @@ a:focus-visible {
 .dashboard-pipeline-row small {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .performance-values {
@@ -2872,7 +2931,7 @@ a:focus-visible {
 
 .performance-values b {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .dashboard-performance-row em {
@@ -2880,7 +2939,7 @@ a:focus-visible {
   padding: 4px 6px;
   border: 1px solid currentColor;
   border-radius: 5px;
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-style: normal;
   text-align: center;
 }
@@ -2908,7 +2967,7 @@ a:focus-visible {
 
 .calendar-controls strong {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   text-align: center;
 }
 
@@ -2917,7 +2976,7 @@ a:focus-visible {
   cursor: pointer;
   color: var(--muted);
   background: transparent;
-  font-size: 20px;
+  font-size: var(--text-lg);
 }
 
 .calendar-step:hover {
@@ -2939,7 +2998,7 @@ a:focus-visible {
 .calendar-weekdays span {
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   text-align: center;
 }
 
@@ -2984,13 +3043,13 @@ a:focus-visible {
 
 .calendar-day > span:first-child {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .calendar-day small {
   margin-top: auto;
   color: var(--muted);
-  font-size: 8px;
+  font-size: var(--text-2xs);
 }
 
 .calendar-day.selected small {
@@ -3027,7 +3086,7 @@ a:focus-visible {
   padding: 12px 14px;
   color: var(--muted);
   border-bottom: 1px solid var(--border-soft);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .calendar-legend span {
@@ -3046,12 +3105,12 @@ a:focus-visible {
 
 .calendar-detail-head strong {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .calendar-detail-head span {
   color: var(--meta);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .calendar-detail-body {
@@ -3084,26 +3143,26 @@ a:focus-visible {
 
 .calendar-detail-list a strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .calendar-detail-list a small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .calendar-detail-list > p {
   margin: 12px 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .calendar-note {
   grid-template-columns: minmax(0, 1fr) 28px;
   color: var(--fg-2);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .calendar-note button {
@@ -3113,7 +3172,7 @@ a:focus-visible {
   color: var(--muted);
   background: transparent;
   border-radius: 50%;
-  font-size: 17px;
+  font-size: var(--text-md);
 }
 
 .calendar-note button:hover {
@@ -3134,7 +3193,7 @@ a:focus-visible {
 .calendar-note-form .button {
   min-height: 34px;
   border-radius: 6px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-work-grid {
@@ -3163,7 +3222,7 @@ a:focus-visible {
   align-items: center;
   gap: 7px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .todo-group-title i {
@@ -3200,13 +3259,13 @@ a:focus-visible {
 }
 
 .dashboard-todo strong {
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-todo small {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-todo > div {
@@ -3237,7 +3296,7 @@ a:focus-visible {
 .dashboard-group-empty {
   margin: 13px 0 15px;
   color: var(--meta);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-pipeline-row {
@@ -3279,7 +3338,7 @@ a:focus-visible {
 
 .pipeline-progress b {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .dashboard-inspiration {
@@ -3295,14 +3354,14 @@ a:focus-visible {
 }
 
 .dashboard-inspiration h2 {
-  font-size: 18px;
+  font-size: var(--text-lg);
 }
 
 .dashboard-inspiration p:last-child {
   max-width: 620px;
   margin-bottom: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-inspiration nav {
@@ -3318,7 +3377,7 @@ a:focus-visible {
   color: var(--muted);
   border: 1px solid var(--border-soft);
   border-radius: 6px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-inspiration nav a:hover {
@@ -3343,7 +3402,7 @@ a:focus-visible {
 
 .dashboard-blank a {
   color: var(--accent);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .dashboard-load-error {
@@ -3405,10 +3464,6 @@ a:focus-visible {
     gap: 14px;
   }
 
-  .dashboard-header h1 {
-    font-size: 34px;
-  }
-
   .dashboard-header-status {
     align-self: flex-end;
   }
@@ -3419,7 +3474,7 @@ a:focus-visible {
   }
 
   .dashboard-metric strong {
-    font-size: 23px;
+    font-size: var(--text-xl);
   }
 
   .dashboard-panel-head {
@@ -3517,7 +3572,7 @@ a:focus-visible {
 .inspiration-page .compact-button {
   min-height: 34px;
   padding-inline: 13px;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .inspiration-tabs {
@@ -3534,7 +3589,7 @@ a:focus-visible {
   cursor: pointer;
   color: var(--muted);
   background: transparent;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 650;
 }
 
@@ -3580,7 +3635,7 @@ a:focus-visible {
 .inspiration-metric small {
   display: block;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .inspiration-metric strong {
@@ -3588,7 +3643,7 @@ a:focus-visible {
   margin: 17px 0 12px;
   overflow-wrap: anywhere;
   font-family: var(--font-mono);
-  font-size: 31px;
+  font-size: var(--text-num);
   line-height: 1;
 }
 
@@ -3630,20 +3685,20 @@ a:focus-visible {
 
 .inspiration-section-head .eyebrow {
   margin-bottom: 5px;
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .inspiration-section-head h2,
 .inspiration-section-head h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--text-lg);
 }
 
 .inspiration-section-head h2 span {
   margin-left: 7px;
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
 }
 
@@ -3658,12 +3713,12 @@ a:focus-visible {
 .inspiration-inline-controls select {
   width: 160px;
   min-height: 36px;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .inspiration-inline-controls .segmented-control button {
   min-height: 28px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .inspiration-chart-wrap {
@@ -3688,7 +3743,7 @@ a:focus-visible {
 .chart-grid text {
   fill: var(--meta);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .chart-area {
@@ -3714,7 +3769,7 @@ a:focus-visible {
   padding: 12px 18px 15px;
   color: var(--meta);
   border-top: 1px solid var(--border-soft);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .threshold-control {
@@ -3723,7 +3778,7 @@ a:focus-visible {
   align-items: center;
   gap: 6px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .threshold-control input {
@@ -3760,7 +3815,7 @@ a:focus-visible {
 .hot-rank {
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .hot-main,
@@ -3777,7 +3832,7 @@ a:focus-visible {
 
 .hot-main strong {
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -3786,7 +3841,7 @@ a:focus-visible {
 .hot-signal small {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .hot-signal {
@@ -3796,7 +3851,7 @@ a:focus-visible {
 .hot-signal b {
   color: var(--success);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .inspiration-works-panel {
@@ -3828,7 +3883,7 @@ a:focus-visible {
   color: var(--meta);
   background: var(--surface-raised);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 500;
   text-transform: uppercase;
 }
@@ -3866,7 +3921,7 @@ a:focus-visible {
   margin-top: 4px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -3879,7 +3934,7 @@ a:focus-visible {
   cursor: pointer;
   color: var(--fg);
   background: transparent;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 650;
   text-align: left;
   text-overflow: ellipsis;
@@ -3892,7 +3947,7 @@ a:focus-visible {
 
 .number-cell {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .inspiration-platform,
@@ -3903,7 +3958,7 @@ a:focus-visible {
   padding: 3px 7px;
   border: 1px solid var(--border-soft);
   border-radius: 5px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   line-height: 1;
   white-space: nowrap;
 }
@@ -3943,7 +3998,7 @@ a:focus-visible {
 .inspiration-toolbar input,
 .inspiration-toolbar select {
   min-height: 36px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .archive-table-scroll {
@@ -4002,7 +4057,7 @@ a:focus-visible {
   background: var(--accent);
   border-radius: 7px;
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 800;
 }
 
@@ -4015,19 +4070,19 @@ a:focus-visible {
 
 .creator-card-head h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .creator-card-head p {
   margin: 3px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .creator-card-head > strong {
   color: var(--accent);
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: var(--text-lg);
 }
 
 .creator-account-list {
@@ -4055,13 +4110,13 @@ a:focus-visible {
 }
 
 .creator-account-list strong {
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .creator-account-list small {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .creator-account-list a {
@@ -4083,7 +4138,7 @@ a:focus-visible {
   padding: 10px 14px;
   color: var(--muted);
   border-top: 1px solid var(--border-soft);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .reference-creator-card footer button {
@@ -4091,7 +4146,7 @@ a:focus-visible {
   cursor: pointer;
   color: var(--accent);
   background: transparent;
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .inspiration-empty {
@@ -4106,11 +4161,11 @@ a:focus-visible {
 
 .inspiration-empty strong {
   color: var(--fg);
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .inspiration-empty span {
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .inspiration-empty.compact {
@@ -4192,7 +4247,7 @@ a:focus-visible {
 
 .post-detail-meta {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .post-metric-strip {
@@ -4220,14 +4275,14 @@ a:focus-visible {
 
 .post-metric-strip span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .post-metric-strip strong {
   margin-top: 7px;
   overflow-wrap: anywhere;
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: var(--text-lg);
 }
 
 .post-tags {
@@ -4240,7 +4295,7 @@ a:focus-visible {
   background: var(--hover);
   border: 1px solid var(--border-soft);
   border-radius: 5px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .post-content-section {
@@ -4255,7 +4310,7 @@ a:focus-visible {
 .inspiration-markdown {
   padding: 19px 0;
   color: var(--fg-2);
-  font-size: 13px;
+  font-size: var(--text-sm);
   line-height: 1.75;
 }
 
@@ -4314,24 +4369,24 @@ a:focus-visible {
   border: 1px solid var(--border);
   border-radius: 5px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .import-drop-zone strong {
-  font-size: 16px;
+  font-size: var(--text-md);
 }
 
 .import-drop-zone p {
   max-width: 470px;
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .import-drop-zone input {
   width: min(100%, 420px);
   margin-top: 10px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .import-options {
@@ -4345,7 +4400,7 @@ a:focus-visible {
   display: grid;
   gap: 6px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .import-options input,
@@ -4356,7 +4411,7 @@ a:focus-visible {
   background: var(--input);
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .import-summary {
@@ -4384,13 +4439,13 @@ a:focus-visible {
 
 .import-summary strong {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: var(--text-xl);
 }
 
 .import-summary span {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .import-errors,
@@ -4407,7 +4462,7 @@ a:focus-visible {
   gap: 10px;
   margin: 0;
   padding: 10px 12px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .import-errors p + p,
@@ -4426,7 +4481,7 @@ a:focus-visible {
   padding-top: 3px;
   padding-bottom: 10px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .import-candidates button {
@@ -4444,14 +4499,14 @@ a:focus-visible {
 }
 
 .import-candidates button span {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 650;
 }
 
 .import-candidates button small,
 .import-notice {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .import-notice {
@@ -4535,10 +4590,6 @@ a:focus-visible {
     min-height: 0;
   }
 
-  .inspiration-page-header h1 {
-    font-size: 34px;
-  }
-
   .inspiration-page-actions {
     display: grid;
     width: 100%;
@@ -4558,7 +4609,7 @@ a:focus-visible {
   .inspiration-tabs button {
     min-width: 0;
     flex: 1;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .inspiration-summary {
@@ -4577,7 +4628,7 @@ a:focus-visible {
 
   .inspiration-metric strong {
     margin-block: 11px 8px;
-    font-size: 25px;
+    font-size: var(--text-xl);
   }
 
   .inspiration-section-head {
@@ -4674,7 +4725,7 @@ a:focus-visible {
   .inspiration-drawer .drawer-header h2 {
     max-width: calc(100vw - 90px);
     overflow: hidden;
-    font-size: 21px;
+    font-size: var(--text-lg);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -4763,14 +4814,14 @@ a:focus-visible {
 .knowledge-summary small {
   display: block;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .knowledge-summary strong {
   display: block;
   margin: 18px 0 14px;
   font-family: var(--font-mono);
-  font-size: 31px;
+  font-size: var(--text-num);
   line-height: 1;
 }
 
@@ -4794,7 +4845,7 @@ a:focus-visible {
 .knowledge-section-head > span {
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .knowledge-drafts > div:last-child {
@@ -4835,13 +4886,13 @@ a:focus-visible {
 
 .knowledge-draft-main strong {
   margin-bottom: 4px;
-  font-size: 15px;
+  font-size: var(--text-md);
 }
 
 .knowledge-draft-main span {
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .knowledge-draft-main p {
@@ -4849,7 +4900,7 @@ a:focus-visible {
   margin: 9px 0 0;
   overflow: hidden;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4883,7 +4934,7 @@ a:focus-visible {
   border: 1px solid color-mix(in srgb, var(--category-color, var(--accent)), transparent 68%);
   border-radius: 999px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-style: normal;
 }
 
@@ -4948,7 +4999,7 @@ a:focus-visible {
   overflow: hidden;
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4956,7 +5007,7 @@ a:focus-visible {
 .knowledge-card > strong {
   margin: 24px 0 10px;
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: var(--text-lg);
   line-height: 1.25;
 }
 
@@ -4965,7 +5016,7 @@ a:focus-visible {
   margin-bottom: 16px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
@@ -4983,7 +5034,7 @@ a:focus-visible {
   background: var(--hover);
   border: 1px solid var(--border-soft);
   border-radius: 999px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-style: normal;
 }
 
@@ -4993,13 +5044,13 @@ a:focus-visible {
   color: var(--meta);
   border-top: 1px solid var(--border-soft);
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
 .knowledge-card-foot b {
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .knowledge-drawer-layer {
@@ -5035,7 +5086,7 @@ a:focus-visible {
   color: var(--meta);
   border-bottom: 1px solid var(--border-soft);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .knowledge-reader-tags {
@@ -5069,14 +5120,14 @@ a:focus-visible {
 
 .knowledge-form-grid label > span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .knowledge-body-input {
   min-height: 350px;
   resize: vertical;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.7;
 }
 
@@ -5085,13 +5136,13 @@ a:focus-visible {
   margin: 0;
   color: var(--meta);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
 }
 
 .knowledge-save-state {
   max-width: 320px;
   color: var(--danger);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .knowledge-delete-button {
@@ -5106,7 +5157,7 @@ a:focus-visible {
   gap: 9px;
   cursor: pointer;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
 .review-deposit-toggle input {
@@ -5167,10 +5218,6 @@ a:focus-visible {
     min-height: 0;
   }
 
-  .knowledge-page-header h1 {
-    font-size: 34px;
-  }
-
   .knowledge-page-actions {
     display: grid;
     width: 100%;
@@ -5193,7 +5240,7 @@ a:focus-visible {
 
   .knowledge-summary strong {
     margin-block: 13px 10px;
-    font-size: 25px;
+    font-size: var(--text-xl);
   }
 
   .knowledge-drafts,
@@ -5255,7 +5302,7 @@ a:focus-visible {
 
   .knowledge-drawer .drawer-header h2 {
     max-width: calc(100vw - 88px);
-    font-size: 21px;
+    font-size: var(--text-lg);
   }
 
   .knowledge-drawer .drawer-body {

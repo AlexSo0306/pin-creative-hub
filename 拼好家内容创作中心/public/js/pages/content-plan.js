@@ -97,6 +97,24 @@ function filteredCards() {
   });
 }
 
+function nextColumnStatus(status) {
+  const index = COLUMNS.findIndex(([value]) => value === status);
+  return index >= 0 && index < COLUMNS.length - 1 ? COLUMNS[index + 1][0] : null;
+}
+
+function columnTitle(status) {
+  return COLUMNS.find(([value]) => value === status)?.[1] || '';
+}
+
+function updateBoardScrollHint() {
+  const board = document.getElementById('contentBoard');
+  const viewport = document.getElementById('boardViewport');
+  if (!board || !viewport) return;
+  const overflow = board.scrollWidth - board.clientWidth > 8;
+  const canScrollMore = overflow && board.scrollLeft + board.clientWidth < board.scrollWidth - 8;
+  viewport.classList.toggle('can-scroll-more', canScrollMore);
+}
+
 function cardDocuments(card) {
   const documents = [];
   if (card.scriptBody) documents.push('<span title="已有录制稿">录制稿</span>');
@@ -105,6 +123,7 @@ function cardDocuments(card) {
 }
 
 function boardCard(card) {
+  const next = nextColumnStatus(card.status);
   return `
     <article class="plan-card" draggable="true" data-card-id="${card.id}"
       style="--account-color:${card.account.color}">
@@ -137,10 +156,16 @@ function boardCard(card) {
       ` : ''}
       <footer>
         <span>${relativeTime(card.updatedAt)}</span>
-        ${card.status === 'published'
-          ? `<a href="#/review?card=${encodeURIComponent(card.id)}"
-              data-review-card="${card.id}">补数据</a>`
-          : `<span>${COLUMNS.find(([value]) => value === card.status)?.[1] || ''}</span>`}
+        <span class="plan-card-actions">
+          ${card.status === 'published'
+            ? `<a href="#/review?card=${encodeURIComponent(card.id)}"
+                data-review-card="${card.id}">补数据</a>`
+            : ''}
+          ${next
+            ? `<button type="button" class="plan-card-advance" data-advance-card="${card.id}"
+                aria-label="推进到${columnTitle(next)}">${columnTitle(next)} →</button>`
+            : ''}
+        </span>
       </footer>
     </article>
   `;
@@ -207,6 +232,20 @@ function renderBoard() {
       await changeStatus(card.id, status, status === 'producing' ? card.productionProgress : null);
     });
   });
+  board.querySelectorAll('[data-advance-card]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const card = state.cards.find((item) => item.id === button.dataset.advanceCard);
+      const next = card ? nextColumnStatus(card.status) : null;
+      if (!card || !next) return;
+      await changeStatus(card.id, next, next === 'producing' ? card.productionProgress : null);
+    });
+  });
+  updateBoardScrollHint();
+  if (!board.dataset.hintBound) {
+    board.dataset.hintBound = '1';
+    board.addEventListener('scroll', updateBoardScrollHint);
+    window.addEventListener('resize', updateBoardScrollHint);
+  }
 }
 
 function renderAccountFilters() {
@@ -793,11 +832,14 @@ export async function renderContentPlanPage(root) {
 
       <div class="plan-board-meta">
         <span id="planResultCount">正在读取内容…</span>
-        <span>拖动卡片可推进状态</span>
+        <span>拖动卡片或点卡片上的「→」按钮可推进状态</span>
       </div>
-      <section class="content-board" id="contentBoard" aria-live="polite">
-        <div class="loading-state">正在从 SQLite 读取内容计划…</div>
-      </section>
+      <div class="board-viewport" id="boardViewport">
+        <section class="content-board" id="contentBoard" aria-live="polite" role="region"
+          aria-label="内容流水线看板，共 5 列，可横向滚动">
+          <div class="loading-state">正在从 SQLite 读取内容计划…</div>
+        </section>
+      </div>
     </section>
   `;
   bindPage();
