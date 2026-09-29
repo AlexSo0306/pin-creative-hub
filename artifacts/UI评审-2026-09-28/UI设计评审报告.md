@@ -262,4 +262,4 @@
 - 修复提交 `a36cb7c`（分支 `feature/ui-review-fixes`）已推送 GitHub。
 - 因 `feature/fe-mascot-widget`（NAS 实跑分支）基线与 main 一致，已将修复 **cherry-pick** 为 `d4ca73f` 推上 NAS 分支，避免带入 main 上的无关文档提交。
 - 回归证据：`修复后回归/` 目录下 13 张双端截图（桌面+移动），核心修复点已目检确认。
-- **待你方操作**：NAS 部署由另一 AI 拉取 `feature/fe-mascot-widget` 后执行 `deploy.sh`；部署后强刷（Cmd+Shift+R）即可见锅宝之外的本次 UI 修复。
+- **✅ 已部署（2026-09-29）**：NAS 仓库 `/vol1/1000/Docker/Workbench` 非 git 仓库，采用 scp 6 文件 + `docker compose down && up -d --build` 重建镜像。容器 `Up / healthy`，对外服务文件已核验为新版（CSS 含 `--text-2xs`、content-plan.js 含 `advance-card`、dashboard.js 蓝卡 `index===0`、锅宝 mood-mates 仍在）。**部署后强刷（Cmd+Shift+R）即可见全部 UI 修复**。
