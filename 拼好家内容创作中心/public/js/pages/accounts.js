@@ -112,7 +112,7 @@ function renderSummary(accounts) {
 
   return `
     <div class="summary-grid">
-      <article class="summary-primary">
+      <article class="summary-primary${accounts.length ? '' : ' empty'}">
         <p>账号覆盖</p>
         <strong>${accounts.length}<small> 个方向</small></strong>
         <span>${active} 个运营中 · ${preparing} 个筹备中</span>

@@ -44,7 +44,7 @@ function formatNumber(value) {
 }
 
 function formatPercent(value) {
-  if (value === null || value === undefined) return '暂无';
+  if (value === null || value === undefined) return '—';
   return `${(value * 100).toFixed(1)}%`;
 }
 
@@ -84,12 +84,14 @@ function overviewMarkup(data) {
     ['总分享', formatNumber(data.shares), '全部平台累计'],
     [
       '粉丝快照',
-      data.followersTotal === null ? '待接入' : formatNumber(data.followersTotal),
-      `内容带来新增关注 ${formatNumber(data.followersGained)}`
+      data.followersTotal === null ? '—' : formatNumber(data.followersTotal),
+      data.followersTotal === null
+        ? `粉丝数据未接入 · 内容带来新增关注 ${formatNumber(data.followersGained)}`
+        : `内容带来新增关注 ${formatNumber(data.followersGained)}`
     ]
   ];
   return metrics.map(([label, value, detail], index) => `
-    <article class="dashboard-metric${index === 0 ? ' featured' : ''}">
+    <article class="dashboard-metric${index === 0 && data.plays > 0 ? ' featured' : ''}">
       <span>${label}</span>
       <strong>${value}</strong>
       <small>${detail}</small>

@@ -58,7 +58,7 @@ function renderMarkdown(source) {
 }
 
 function formatNumber(value) {
-  if (value === null || value === undefined) return '暂无';
+  if (value === null || value === undefined) return '—';
   const number = Number(value);
   if (number >= 100000000) return `${(number / 100000000).toFixed(1)}亿`;
   if (number >= 10000) {
@@ -160,14 +160,14 @@ function chartMarkup() {
 function summaryMarkup() {
   const summary = state.monitor?.summary || {};
   const items = [
-    ['对标创作者', summary.creators || 0, `${summary.accounts || 0} 个平台账号`],
     ['收录作品', summary.posts || 0, '真实对标作品总量'],
+    ['对标创作者', summary.creators || 0, `${summary.accounts || 0} 个平台账号`],
     ['近 7 日新增', summary.recent || 0, '按入库时间统计'],
     ['文案绑定率', `${Math.round((summary.contentBoundRate || 0) * 100)}%`,
       `${summary.contentBound || 0} 条已绑定文案`]
   ];
   return items.map(([label, value, hint], index) => `
-    <article class="inspiration-metric ${index === 1 ? 'featured' : ''}">
+    <article class="inspiration-metric ${index === 0 && (summary.posts || 0) > 0 ? 'featured' : ''}">
       <span>${label}</span>
       <strong>${typeof value === 'number' ? value.toLocaleString('zh-CN') : value}</strong>
       <small>${hint}</small>

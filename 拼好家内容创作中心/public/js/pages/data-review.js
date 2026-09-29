@@ -139,15 +139,15 @@ function renderFilters() {
 function summaryMarkup() {
   const summary = state.review?.summary || {};
   const metrics = [
-    ['发布内容', `${summary.publishedContent || 0} 条`, '周期内有数据的内容'],
     ['播放 / 阅读', formatNumber(summary.plays), `${summary.recordCount || 0} 条平台记录`],
+    ['发布内容', `${summary.publishedContent || 0} 条`, '周期内有数据的内容'],
     ['总互动', formatNumber(summary.interactions), '点赞、评论、收藏与分享'],
     ['新增关注', formatNumber(summary.followersGained), '由内容带来的涨粉'],
     ['有效咨询', formatNumber(summary.leads), '私信与明确业务线索'],
     ['平均互动率', formatRate(summary.engagementRate), '总互动 / 总播放']
   ];
   return metrics.map(([label, value, hint], index) => `
-    <article class="review-metric ${index === 1 ? 'featured' : ''}">
+    <article class="review-metric ${index === 0 && (summary.plays || 0) > 0 ? 'featured' : ''}">
       <span>${label}</span>
       <strong>${value}</strong>
       <small>${hint}</small>
